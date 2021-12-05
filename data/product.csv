@@ -1,0 +1,4 @@
+product_id;product_name;price;category;manufacturer;timestamp
+1;Iphone 10;1000.;Phone;Apple;'2021-12-03 12:34:29.085482'
+2;Galaxy 13;2000.;Phone;Samsung;'2021-12-02 12:34:29.085482'
+3;Bacon;10.;Food;Old McDonald's;'2021-11-03 12:34:29.085482'
