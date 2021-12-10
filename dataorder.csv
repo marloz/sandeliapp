@@ -1,0 +1,6 @@
+order_type;order_date;timestamp;order_id;vat;manager_manager_id;manager_manager_name;manager_location;customer_customer_id;customer_customer_name;product_id;product_name;price;product_category;manufacturer;quantity;discount
+regular;2021-12-10;2021-12-10 07:51:14.188214;2f5a6d20-597d-11ec-b5a3-181dea3bd7cd;0.21;1;Mother Theresa;Vilnius;1;John Locke;1;Iphone 10;1000.0;Phone;Apple;1;0.0
+regular;2021-12-10;2021-12-10 07:51:14.188214;2f5a6d20-597d-11ec-b5a3-181dea3bd7cd;0.21;1;Mother Theresa;Vilnius;1;John Locke;3;Bacon;10.0;Food;Old McDonald's;10;0.1
+order_type;order_date;timestamp;order_id;vat;manager_manager_id;manager_manager_name;manager_location;customer_customer_id;customer_customer_name;product_id;product_name;price;product_category;manufacturer;quantity;discount
+regular;2021-12-10;2021-12-10 07:52:06.057523;4e450e06-597d-11ec-baf9-181dea3bd7cd;0.21;1;Mother Theresa;Vilnius;1;John Locke;1;Iphone 10;1000.0;Phone;Apple;1;0.0
+regular;2021-12-10;2021-12-10 07:52:06.057523;4e450e06-597d-11ec-baf9-181dea3bd7cd;0.21;1;Mother Theresa;Vilnius;1;John Locke;3;Bacon;10.0;Food;Old McDonald's;10;0.1

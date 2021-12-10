@@ -1,8 +1,9 @@
 from src.entities import Manager, Customer, Product, Order
-from src.data_loader import EntityDataLoader, TableInfo
-from src._constants import ENTITY_TABLES, ORDER_HISTORY_TABLE_INFO
-import pandas as pd
+from src.data_loader import EntityDataLoader, TableInfo, fill_table_info_from_alias
+from src.order import OrderProcessor
+from src._constants import DATA_PATH
 
+ORDER_TABLE = DATA_PATH + "order.csv"
 
 # Manager info
 MANAGER_ID = 1
@@ -10,36 +11,37 @@ MANAGER_NAME = "Mother Theresa"
 MANAGER_LOCATION = "Vilnius"
 
 # Manager logs in
-manager = Manager(id=MANAGER_ID, name=MANAGER_NAME, location=MANAGER_LOCATION)
+manager = Manager(
+    manager_id=MANAGER_ID, manager_name=MANAGER_NAME, location=MANAGER_LOCATION
+)
 
 # Entire entity data is preloaded
-entity_tables = [TableInfo(**table_info) for table_info in ENTITY_TABLES.values()]
+customer_table_info = fill_table_info_from_alias("customer")
+product_table_info = fill_table_info_from_alias("product")
+entity_tables = [
+    TableInfo(**table_info) for table_info in [customer_table_info, product_table_info]
+]
 entity_data_loader = EntityDataLoader(entity_tables)
 entity_data_loader.load_data()
 
 # Manager selects customer and product, info retrieved from entity table
 ENTITY_ID = 1
-ENTITY = "customer"
-customer_info = entity_data_loader.get_single_entity_info_dict(
-    table_alias=ENTITY, entity_id=ENTITY_ID
+customer = entity_data_loader.get_single_entity_instance(
+    entity=Customer, entity_id=ENTITY_ID
 )
-customer = Customer(**customer_info)
 
 # Manager selects product
 ENTITY_ID = 1
-ENTITY = "product"
-product_info = entity_data_loader.get_single_entity_info_dict(
-    table_alias=ENTITY, entity_id=ENTITY_ID
+product1 = entity_data_loader.get_single_entity_instance(
+    entity=Product, entity_id=ENTITY_ID
 )
-product1 = Product(**product_info)
 
 ENTITY_ID = 3
-product_info = entity_data_loader.get_single_entity_info_dict(
-    table_alias=ENTITY, entity_id=ENTITY_ID
+product2 = entity_data_loader.get_single_entity_instance(
+    entity=Product, entity_id=ENTITY_ID
 )
-product2 = Product(**product_info)
 
-# Manager fills in order info
+# # Manager fills in order info
 ORDER_TYPE = "regular"
 ITEMS = [product1, product2]
 QUANTITIES = [1, 10]
@@ -48,24 +50,10 @@ DISCOUNTS = [0.0, 0.1]
 order = Order(
     manager=manager,
     customer=customer,
-    type=ORDER_TYPE,
+    order_type=ORDER_TYPE,
     items=ITEMS,
     quantities=QUANTITIES,
     discounts=DISCOUNTS,
 )
 
-
-def invert_dict(d: dict) -> dict:
-    return {v: k for k, v in d.items()}
-
-
-product_columns = invert_dict(
-    entity_data_loader.table_info_dict["product"].column_mapping
-)
-order_df = order.prepare_for_export(product_columns)
-
-order_history_columns = invert_dict(ORDER_HISTORY_TABLE_INFO["column_mapping"])
-order_df = order_df.rename(columns=order_history_columns)[
-    list(order_history_columns.values())
-]
-print(order_df)
+OrderProcessor(order).export(ORDER_TABLE)
