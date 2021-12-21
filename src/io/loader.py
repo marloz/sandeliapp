@@ -3,7 +3,7 @@ from pydantic.dataclasses import dataclass
 from abc import abstractmethod
 from src.entities import Entity
 from src.config import SEP, DATA_PATH, SORT_COLUMN, TABLE_FORMAT, ID_SUFFIX, ENTITY_NAME_COLUMN_SUFFIX, COLUMN_NAME_SEPARATOR
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import os
 import pandas as pd
 import streamlit as st
@@ -14,7 +14,7 @@ log = Logger()
 @dataclass
 class TableInfo:
     alias: str
-    name: str
+    path: str
     id_column: str
     entity_name_column: str
     sort_column: str
@@ -28,7 +28,7 @@ class BaseDataLoader:
     def load_data(self) -> None:
         self.data = {
             table.alias: (
-                self.load_table(table.name).pipe(
+                self.load_table(table.path).pipe(
                     self.process_table, table_info=table)
             )
             for table in self.table_info_dict.values()
@@ -72,20 +72,21 @@ class EntityDataLoader(BaseDataLoader):
                                    identifier_type: str = 'id') -> Entity:
         log(f"Fetching single {entity} data using id: {entity_identifier}")
         entity_name = entity.__name__.lower()
-        entity_df = self.data[entity_name]
         table_info = self.table_info_dict[entity_name]
         required_columns = list(entity.__annotations__.keys())
-        identifier_column = table_info.id_column if identifier_type == 'id' else table_info.entity_name_column
-        entity_df = entity_df.loc[lambda x: x[identifier_column]
-                                  == entity_identifier]
-        entity_dict = entity_df[required_columns].to_dict("records")[0]
+        identifier_column = (table_info.id_column if identifier_type == 'id'
+                             else table_info.entity_name_column)
+        entity_df = (self.data[entity_name]
+                     .loc[lambda x: x[identifier_column] == entity_identifier, required_columns])
+        entity_dict = entity_df.to_dict("records")[0]
         return entity(**entity_dict)
 
 
-def fill_table_info_from_alias(alias: str) -> Dict[str, Any]:
+def fill_table_info_from_alias(alias: str,
+                               data_path: Optional[str] = DATA_PATH) -> Dict[str, Any]:
     return dict(
         alias=alias,
-        name=os.path.join(DATA_PATH, ".".join([alias, TABLE_FORMAT])),
+        path=os.path.join(data_path, ".".join([alias, TABLE_FORMAT])),
         id_column=COLUMN_NAME_SEPARATOR.join([alias, ID_SUFFIX]),
         entity_name_column=COLUMN_NAME_SEPARATOR.join(
             [alias, ENTITY_NAME_COLUMN_SUFFIX]),
@@ -94,9 +95,10 @@ def fill_table_info_from_alias(alias: str) -> Dict[str, Any]:
 
 
 @st.cache
-def preload_data(entities_to_load: list[str]) -> EntityDataLoader:
+def preload_data(entities_to_load: list[str],
+                 data_path: Optional[str] = DATA_PATH) -> EntityDataLoader:
     entity_tables = [
-        TableInfo(**fill_table_info_from_alias(entity))
+        TableInfo(**fill_table_info_from_alias(entity, data_path))
         for entity in entities_to_load
     ]
     entity_data_loader = EntityDataLoader(entity_tables)
