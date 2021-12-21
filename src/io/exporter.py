@@ -21,7 +21,7 @@ class Exporter:
         log(f'Exporting {str(self.entity)} to {output_path}')
         (self._to_df()
          .pipe(self._add_timestamp)
-         .to_csv(output_path, sep=SEP, mode='a', index=False))
+         .to_csv(output_path, sep=SEP, mode='a', index=False, header=False))
 
     def _to_df(self) -> pd.DataFrame:
         return pd.json_normalize([self._serialize()], sep="_")

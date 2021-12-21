@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 
 # Dates
 DATE_FORMAT: str = "%Y-%m-%d"  # Default date format
@@ -26,4 +27,4 @@ COLUMN_NAME_SEPARATOR = '_'
 SEP: str = ";"  # column separator in csv files
 
 # Main
-ENTITIES_TO_LOAD = ['customer', 'product', 'manager']
+DATASOURCES = ['customer', 'product', 'manager']

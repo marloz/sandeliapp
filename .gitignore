@@ -1,1 +1,3 @@
-211211.log
+*.log
+.vscode/
+__pycahce__/

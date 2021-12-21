@@ -26,13 +26,9 @@ class BaseDataLoader:
         self.data: Dict[str, pd.DataFrame]
 
     def load_data(self) -> None:
-        self.data = {
-            table.alias: (
-                self.load_table(table.path).pipe(
-                    self.process_table, table_info=table)
-            )
-            for table in self.table_info_dict.values()
-        }
+        self.data = {table.alias: (self.load_table(table.path)
+                                   .pipe(self.process_table, table_info=table))
+                     for table in self.table_info_dict.values()}
 
     def load_table(self, table_name: str) -> pd.DataFrame:
         log(f"Loading data from: {table_name}")
@@ -54,17 +50,11 @@ class EntityDataLoader(BaseDataLoader):
         )
 
     @staticmethod
-    def filter_latest_rows_in_df(
-        df: pd.DataFrame, id_column: str, sort_column: str,
-    ) -> pd.DataFrame:
-        log(
-            f"Filtering latest row using {id_column} sorted by {sort_column}")
-        return df.loc[
-            lambda x: (
-                x.groupby(id_column)[sort_column].transform(
-                    max) == x[sort_column]
-            )
-        ]
+    def filter_latest_rows_in_df(df: pd.DataFrame,
+                                 id_column: str,
+                                 sort_column: str) -> pd.DataFrame:
+        log(f"Filtering latest row using {id_column} sorted by {sort_column}")
+        return df.loc[lambda x: (x.groupby(id_column)[sort_column].transform(max) == x[sort_column])]
 
     @st.cache
     def get_single_entity_instance(self, entity: Entity,

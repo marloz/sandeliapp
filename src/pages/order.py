@@ -1,7 +1,7 @@
 from src.entities import Customer, Manager, Product
 from src.io.loader import preload_data
 from src.order import OrderProcessor, Order
-from src.config import ENTITIES_TO_LOAD, ORDER_TYPES
+from src.config import DATASOURCES, ORDER_TYPES
 import streamlit as st
 
 
@@ -11,7 +11,7 @@ def app():
     MANAGER_ID = 'some_email@medexy.lt'
 
     # Load and cache data to be used
-    data_loader = preload_data(ENTITIES_TO_LOAD)
+    data_loader = preload_data(DATASOURCES)
 
     # Print out manager
     manager = data_loader.get_single_entity_instance(
