@@ -1,17 +1,21 @@
-import streamlit as st
+from src.apps import ProductApp, CustomerApp, OrderApp, LoginApp
+import hydralit as hy
 
-from src.pages.multipage import MultiPage
-from src.pages import welcome, order, customer, product
+from src.apps.home import HomeApp
 
 
-# Create an instance of the app
-app = MultiPage()
+def main():
+    app = hy.HydraApp(title='Sandeliapp')
 
-# Add all your applications (pages) here
-app.add_page("Home", welcome.app)
-app.add_page("Order", order.app)
-app.add_page("Customer", customer.app)
-app.add_page('Product', product.app)
+    app.add_app('Home', app=HomeApp(), is_home=True)
+    app.add_app("Order", app=OrderApp())
+    app.add_app("Customer", app=CustomerApp())
+    app.add_app('Product', app=ProductApp())
 
-# The main app
-app.run()
+    app.add_app('Login', app=LoginApp(), is_login=True)
+
+    app.run()
+
+
+if __name__ == '__main__':
+    main()

@@ -2,7 +2,8 @@ from src.logger import Logger
 from pydantic.dataclasses import dataclass
 from abc import abstractmethod
 from src.entities import Entity
-from src.config import SEP, DATA_PATH, SORT_COLUMN, TABLE_FORMAT, ID_SUFFIX, ENTITY_NAME_COLUMN_SUFFIX, COLUMN_NAME_SEPARATOR
+from src.config import SEP, DATA_PATH, SORT_COLUMN, TABLE_FORMAT, ID_SUFFIX, \
+    ENTITY_NAME_COLUMN_SUFFIX, COLUMN_NAME_SEPARATOR
 from typing import List, Dict, Any, Optional
 import os
 import pandas as pd
@@ -54,7 +55,8 @@ class EntityDataLoader(BaseDataLoader):
                                  id_column: str,
                                  sort_column: str) -> pd.DataFrame:
         log(f"Filtering latest row using {id_column} sorted by {sort_column}")
-        return df.loc[lambda x: (x.groupby(id_column)[sort_column].transform(max) == x[sort_column])]
+        return df.loc[lambda x: (x.groupby(id_column)[sort_column]
+                                 .transform(max) == x[sort_column])]
 
     @st.cache
     def get_single_entity_instance(self, entity: Entity,

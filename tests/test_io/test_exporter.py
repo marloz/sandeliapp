@@ -1,5 +1,4 @@
 from datetime import datetime
-from src.pages import customer
 from tests.dir import TEST_DATA_PATH
 from tests.test_io.test_loader import My_Data
 

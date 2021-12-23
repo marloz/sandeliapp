@@ -1,5 +1,4 @@
 import os
-from enum import Enum
 
 # Dates
 DATE_FORMAT: str = "%Y-%m-%d"  # Default date format
