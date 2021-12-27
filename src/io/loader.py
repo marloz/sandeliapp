@@ -58,11 +58,10 @@ class EntityDataLoader(BaseDataLoader):
         return df.loc[lambda x: (x.groupby(id_column)[sort_column]
                                  .transform(max) == x[sort_column])]
 
-    @st.cache
     def get_single_entity_instance(self, entity: Entity,
                                    entity_identifier: str,
                                    identifier_type: str = 'id') -> Entity:
-        log(f"Fetching single {entity} data using id: {entity_identifier}")
+        log(f"Fetching single {entity} data using {identifier_type}: {entity_identifier}")
         entity_name = entity.__name__.lower()
         table_info = self.table_info_dict[entity_name]
         required_columns = list(entity.__annotations__.keys())

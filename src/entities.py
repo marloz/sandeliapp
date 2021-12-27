@@ -23,6 +23,13 @@ class Customer(Entity):
 class Product(Entity):
     product_id: str
     product_name: str
-    price: float
+    unit_price: float
     product_category: str
     manufacturer: str
+
+
+@dataclass
+class OrderRow(Entity):
+    product: Product
+    quantity: int
+    discount: float

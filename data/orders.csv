@@ -1,0 +1,1 @@
+order_id;order_date;order_type;manager_id;manager_name;location;customer_id;customer_name;product_id;product_name;product_category;manufacturer;quantity;unit_price;discount_percent;discount_amount;unit_price_vat;unit_price_discount;unit_price_discount_vat;sum;sum_vat;timestamp
