@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, List
 from pydantic.json import pydantic_encoder
 from dataclasses import dataclass
 from pydantic import Field
