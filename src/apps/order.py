@@ -1,12 +1,15 @@
-from src.entities import Customer, Manager, Product, OrderRow
+from src.entities import Customer, Manager, Product, OrderRow, Entity
 from src.io.loader import preload_data, EntityDataLoader
 from src.io.exporter import Exporter
 from src.config import DATA_PATH, DATASOURCES, ORDER_TYPES, VAT
+
 import streamlit as st
 from hydralit import HydraHeadApp
 import pandas as pd
 import os
-import time
+from datetime import datetime
+from typing import Tuple
+from uuid import uuid1
 
 st.session_state['order_rows'] = []
 
@@ -38,11 +41,23 @@ class OrderApp(HydraHeadApp):
             entity=Manager, entity_identifier=MANAGER_ID
         )
         st.write(manager)
-        self._select_fixed_order_variables(data_loader)
-        self._add_item_to_order(data_loader)
+        order_date, order_type, customer = self._select_fixed_order_variables(
+            data_loader)
+        product, selected_quantity, entered_discount = self._get_item_details(
+            data_loader)
+        order_row = OrderRow(manager=manager,
+                             customer=customer,
+                             order_date=order_date,
+                             order_type=order_type,
+                             product=product,
+                             quantity=selected_quantity,
+                             discount=entered_discount)
+        if st.button('Add to order'):
+            st.session_state['order_rows'].append(order_row)
         self._show_order_summary()
 
-    def _select_fixed_order_variables(self, data_loader: EntityDataLoader):
+    def _select_fixed_order_variables(
+            self, data_loader: EntityDataLoader) -> Tuple[datetime.date, str, str]:
         with st.container():
             date_col, type_col, customer_col = st.columns([1, 1, 4])
             with date_col:
@@ -50,42 +65,52 @@ class OrderApp(HydraHeadApp):
             with type_col:
                 order_type = st.selectbox('Order type', ORDER_TYPES)
             with customer_col:
-                customer_list = data_loader.data['customer']['customer_name'] \
-                    .tolist()
-                selected_customer = st.selectbox(
-                    'Select customer', customer_list)
+                selected_customer = self._get_entity_from_selectbox(
+                    Customer, data_loader)
                 customer = data_loader.get_single_entity_instance(
                     Customer,
                     entity_identifier=selected_customer,
                     identifier_type='name')
+        return order_date, order_type, customer
+
+    def _get_entity_from_selectbox(self, entity: Entity, data_loader: EntityDataLoader) -> str:
+        entity_name = entity.__name__.lower()
+        table_info = data_loader.table_info_dict[entity_name]
+        entity_list = data_loader.data[entity_name][table_info.entity_name_column] \
+            .tolist()
+        selected_entity = st.selectbox(f'Select {entity_name}', entity_list)
+        return selected_entity
 
     def _check_inventory(self, selected_product: str) -> None:
         if st.button('Check inventory'):
             st.write(f'Inventory holds 2 {selected_product} items')
 
-    def _add_item_to_order(self, data_loader: EntityDataLoader) -> None:
+    def _get_item_details(
+            self, data_loader: EntityDataLoader) -> Tuple[Product, int, float]:
         with st.container():
-            product_col, quantity_col, discount_col = st.columns([4, 1, 1])
+            (product_col, quantity_col,
+             discount_col, inventory_col) = st.columns([4, 1, 1, 1])
+
             with product_col:
-                product_list = data_loader.data['product']['product_name'] \
-                    .tolist()
-                selected_product = st.selectbox('Select product', product_list)
-                self._check_inventory(selected_product)
+                selected_product = self._get_entity_from_selectbox(
+                    Product, data_loader)
                 product = data_loader.get_single_entity_instance(
                     Product,
                     entity_identifier=selected_product,
                     identifier_type='name')
+
             with quantity_col:
                 selected_quantity = st.number_input(
                     'Enter quantity', min_value=1)
+
             with discount_col:
                 entered_discount = st.number_input('Enter discount %', min_value=0.,
                                                    max_value=100., step=10.)
-        order_row = OrderRow(product=product,
-                             quantity=selected_quantity,
-                             discount=entered_discount)
-        if st.button('Add to order'):
-            st.session_state['order_rows'].append(order_row)
+
+            with inventory_col:
+                self._check_inventory(selected_product)
+
+        return product, selected_quantity, entered_discount
 
     def _show_order_summary(self):
         if len(st.session_state['order_rows']) > 0:
@@ -116,11 +141,14 @@ class OrderApp(HydraHeadApp):
 
                 if submit:
                     output_path = os.path.join(DATA_PATH, 'orders.csv')
-                    with st.spinner("🤓 now redirecting to application...."):
-                        st.success(f'Order exported to {output_path}')
-                        time.sleep(1)
-                        st.session_state['order_rows'] = []
+                    self.save_order(output_path, order_df)
+                    st.session_state['order_rows'] = []
                     order_summary = st.empty()
+
+    def save_order(self, output_path: str, order_df: pd.DataFrame) -> None:
+        order_df = order_df.assign(order_id=str(uuid1()))
+        Exporter(Entity).write(order_df, output_path)
+        st.success(f'Order exported to {output_path}')
 
 
 def add_order_amounts(order_df: pd.DataFrame) -> pd.DataFrame:

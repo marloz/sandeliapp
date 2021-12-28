@@ -29,15 +29,15 @@ class CsvWriter(BaseWriter):
 
 class Exporter:
 
-    def __init__(self, entity: Entity, writer: BaseWriter = CsvWriter) -> None:
+    def __init__(self, entity: Entity) -> None:
         self.entity = entity
         self._timestamp: datetime = datetime.now()
-        self.writer = writer
+        self.writer: BaseWriter = CsvWriter()
 
     def export(self, output_path: str) -> None:
         log(f'Exporting {str(self.entity)} to {output_path}')
         df = self.prepare_for_export()
-        self.writer.write(df, output_path)
+        self.write(df, output_path)
 
     def prepare_for_export(self) -> pd.DataFrame:
         return (self._to_df(self._serialize(self.entity))
@@ -57,3 +57,6 @@ class Exporter:
 
     def _add_timestamp(self, df: pd.DataFrame) -> pd.DataFrame:
         return df.assign(timestamp=self._timestamp.strftime(TIMESTAMP_FORMAT))
+
+    def write(self, df: pd.DataFrame, output_path: str) -> None:
+        self.writer.write(df, output_path)
