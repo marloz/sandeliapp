@@ -1,4 +1,5 @@
 from pydantic.dataclasses import dataclass
+from datetime import date
 
 
 @dataclass
@@ -23,6 +24,17 @@ class Customer(Entity):
 class Product(Entity):
     product_id: str
     product_name: str
-    price: float
+    unit_price: float
     product_category: str
     manufacturer: str
+
+
+@dataclass
+class OrderRow(Entity):
+    manager: Manager
+    customer: Customer
+    product: Product
+    order_date: date
+    order_type: str
+    quantity: int
+    discount: float

@@ -19,7 +19,7 @@ class ProductApp(HydraHeadApp):
 
         product = Product(product_id=str(uuid1()),
                           product_name=product_name,
-                          price=product_price,
+                          unit_price=product_price,
                           product_category=product_category,
                           manufacturer=manufacturer)
 

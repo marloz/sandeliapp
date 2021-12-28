@@ -9,7 +9,7 @@ DATA_PATH: str = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "data")
 
 # Order
-VAT: float = 0.21  # VAT tax applied in Order
+VAT: float = 1.21  # VAT tax applied in Order
 ORDER_TYPES = ['regular',
                'return',
                'credit',
@@ -26,4 +26,4 @@ COLUMN_NAME_SEPARATOR = '_'
 SEP: str = ";"  # column separator in csv files
 
 # Main
-DATASOURCES = ['customer', 'product', 'manager']
+DATASOURCES = ['customer', 'product', 'manager', 'order']
