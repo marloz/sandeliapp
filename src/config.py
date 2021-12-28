@@ -26,4 +26,4 @@ COLUMN_NAME_SEPARATOR = '_'
 SEP: str = ";"  # column separator in csv files
 
 # Main
-DATASOURCES = ['customer', 'product', 'manager']
+DATASOURCES = ['customer', 'product', 'manager', 'order']

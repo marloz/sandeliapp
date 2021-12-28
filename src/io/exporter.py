@@ -4,7 +4,6 @@ import json
 import pandas as pd
 import re
 from datetime import datetime
-from typing import List
 from abc import ABC, abstractmethod
 
 from src.config import SEP, TIMESTAMP_FORMAT
