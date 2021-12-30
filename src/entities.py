@@ -18,6 +18,13 @@ class Manager(Entity):
 class Customer(Entity):
     customer_id: str
     customer_name: str
+    address: str
+    post_code: str
+    location: str
+    email: str
+    telephone: str
+    customer_code: str
+    vat_code: str
 
 
 @dataclass

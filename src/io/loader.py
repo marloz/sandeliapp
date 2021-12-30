@@ -5,7 +5,7 @@ from abc import abstractmethod
 from src.entities import Entity
 from src.config import SEP, DATA_PATH, SORT_COLUMN, TABLE_FORMAT, ID_SUFFIX, \
     ENTITY_NAME_COLUMN_SUFFIX, COLUMN_NAME_SEPARATOR
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 import os
 import pandas as pd
 import streamlit as st
@@ -110,7 +110,7 @@ def fill_table_info_from_alias(alias: str,
     return table_info
 
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def preload_data(datasources: List[str]
                  ) -> EntityDataLoader:
     tables = [TableInfo(**fill_table_info_from_alias(table))

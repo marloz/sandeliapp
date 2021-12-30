@@ -1,15 +1,16 @@
-from src import logger
+from .utils import get_entity_from_selectbox
+
 from src.entities import Customer, Manager, Product, OrderRow, Entity
-from src.io.loader import CountDataLoader, CountTable, EntityDataLoader, TableInfo, fill_table_info_from_alias, preload_data
+from src.io.loader import CountDataLoader, CountTable, EntityDataLoader, fill_table_info_from_alias
 from src.io.exporter import Exporter
-from src.config import DATA_PATH, DATASOURCES, ORDER_TYPES, VAT
+from src.config import DATA_PATH, ORDER_TYPES, VAT, DEFAULT_CUSTOMER
 
 import streamlit as st
 from hydralit import HydraHeadApp
 import pandas as pd
 import os
 from datetime import date
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Optional
 from uuid import uuid1
 
 st.session_state['order_rows'] = []
@@ -25,21 +26,18 @@ ORDER_SUMMARY_COLUMNS = [
 ]
 MANAGER_ID = 'some_email@medexy.lt'
 NEGATIVE_QUANTITY_TYPES = ['stock refill', 'return']
-DEFAULT_CUSTOMER = 'default'
 OUTPUT_PATH = os.path.join(DATA_PATH, 'order.csv')
-ENTITY_TABLE_TYPE, GROUPED_TABLE_TYPE = 'entity', 'grouped'
 
 
 class OrderApp(HydraHeadApp):
 
-    def __init__(self):
-        self.order_rows = []
-        self.entity_dataloader: EntityDataLoader = None
-        self.order_dataloader: CountDataLoader = None
+    def __init__(self, entity_dataloader: EntityDataLoader) -> None:
+        self.order_rows: List[OrderRow] = []
+        self.entity_dataloader = entity_dataloader
+        self.order_dataloader: Optional[CountDataLoader] = None
 
     def run(self):
 
-        self.entity_dataloader = preload_data(DATASOURCES)
         self.order_dataloader = self.load_orders()
 
         manager = self.entity_dataloader.get_single_entity_instance(
@@ -86,8 +84,8 @@ class OrderApp(HydraHeadApp):
                 if order_type in NEGATIVE_QUANTITY_TYPES:
                     selected_customer = DEFAULT_CUSTOMER
                 else:
-                    selected_customer = self.get_entity_from_selectbox(
-                        Customer)
+                    selected_customer = get_entity_from_selectbox(
+                        Customer, self.entity_dataloader)
                 customer = self.entity_dataloader.get_single_entity_instance(
                     Customer,
                     entity_identifier=selected_customer,
@@ -95,21 +93,14 @@ class OrderApp(HydraHeadApp):
 
         return order_date, order_type, customer
 
-    def get_entity_from_selectbox(self, entity: Entity) -> str:
-        entity_name = entity.__name__.lower()
-        table_info = self.entity_dataloader.table_info_dict[entity_name]
-        entity_list = self.entity_dataloader.data[entity_name][table_info.name_column] \
-            .tolist()
-        selected_entity = st.selectbox(f'Select {entity_name}', entity_list)
-        return selected_entity
-
     def get_item_details(self) -> Tuple[Product, int, float]:
         with st.container():
             (product_col, quantity_col,
              discount_col, inventory_col) = st.columns([4, 1, 1, 1])
 
             with product_col:
-                selected_product = self.get_entity_from_selectbox(Product)
+                selected_product = get_entity_from_selectbox(
+                    Product, self.entity_dataloader)
                 product = self.entity_dataloader.get_single_entity_instance(
                     Product,
                     entity_identifier=selected_product,

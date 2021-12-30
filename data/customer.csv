@@ -1,6 +1,8 @@
-customer_id;customer_name;timestamp
-'0';default;'2021-12-04 12:34:29.085482'
-'1';John Locke;'2021-12-04 12:34:29.085482'
-'1';John Locke;'2021-12-05 12:34:29.085482'
-'2';Adam Smith;'2021-12-03 12:34:29.085482'
-377d25a4-621d-11ec-895b-181dea3bd7cd;Jacques Vallet;2021-12-21 07:16:56.617487
+customer_id;customer_name;address;post_code;location;email;telephone;customer_code;vat_code;timestamp
+'0';default;Main Str. 420;US-999;New York;default.inbox@me.com;0800-555-134-22;301454441;XX777000123;'2021-12-04 12:34:29.085482'
+'1';John Locke;Home is where heart is 1;XYZ;London;philosophy@rulez.gov;0440-123-547-89;741258963;YY666000654;'2021-12-04 12:34:29.085482'
+'1';John Locke;Moved in here recently 2;XYZ;London;philosophy@rulez.gov;0440-123-547-89;741258963;YY666000654;'2021-12-05 12:34:29.085482'
+'2';Adam Smith;Animal Spirits 16;XYZ;Kedainiai;moneyprintergoes@brrr.eu;0440-456-789-90;111111112;ZZ111111111;'2021-12-03 12:34:29.085482'
+377d25a4;Jacques Vallet;Flying Saucer Ave. 1;QED;Ufoville;iwanttobelieve@milkyway.com;0440-222-333-44;111111113;QQ111111110;2021-12-21 07:16:56.617487
+'1';John Locke;Moved in here recently 2;XYZ;London;enlighment@now.eu;0440-123-547-89;741258963;YY666000654;2021-12-30 14:37:55.278539
+'1';John Locke;Moved in here recently 2;XYZ;Paris;enlighment@now.eu;0440-123-547-89;741258963;YY666000654;2021-12-30 14:46:39.553956
