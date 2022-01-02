@@ -29,4 +29,4 @@ SEP: str = ";"  # column separator in csv files
 DATASOURCES = ['customer', 'product', 'manager', 'order']
 
 # has to be added to DB as first entry
-DEFAULT_CUSTOMER = 'default'
+DEFAULT_VALUE = 'default'

@@ -9,6 +9,7 @@ from typing import List, Dict, Any, Optional
 import os
 import pandas as pd
 import streamlit as st
+from typing import Union
 
 log = Logger()
 
@@ -73,7 +74,7 @@ class EntityDataLoader(BaseDataLoader):
 
     def get_single_entity_instance(self, entity: Entity,
                                    entity_identifier: str,
-                                   identifier_type: str = 'id') -> Entity:
+                                   identifier_type: str = 'id') -> Union[Entity, None]:
         log(f"Fetching single {entity} data using {identifier_type}: {entity_identifier}")
         entity_name = entity.__name__.lower()
         table_info = self.table_info_dict[entity_name]

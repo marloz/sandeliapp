@@ -1,17 +1,14 @@
-from .utils import get_entity_from_selectbox
-
+from .utils import get_entity_from_selectbox, generate_id, get_output_path
 from src.entities import Customer, Manager, Product, OrderRow, Entity
 from src.io.loader import CountDataLoader, CountTable, EntityDataLoader, fill_table_info_from_alias
 from src.io.exporter import Exporter
-from src.config import DATA_PATH, ORDER_TYPES, VAT, DEFAULT_CUSTOMER
+from src.config import ORDER_TYPES, VAT
 
 import streamlit as st
 from hydralit import HydraHeadApp
 import pandas as pd
-import os
 from datetime import date
 from typing import Tuple, List, Optional
-from uuid import uuid1
 
 st.session_state['order_rows'] = []
 
@@ -26,21 +23,23 @@ ORDER_SUMMARY_COLUMNS = [
 ]
 MANAGER_ID = 'some_email@medexy.lt'
 NEGATIVE_QUANTITY_TYPES = ['stock refill', 'return']
-OUTPUT_PATH = os.path.join(DATA_PATH, 'order.csv')
+OUTPUT_NAME = 'order'
+GROUPBY_INVENTORY = 'product_name'
+INVENTORY_AGGREGATION_DICT = {'quantity': 'sum'}
 
 
 class OrderApp(HydraHeadApp):
 
-    def __init__(self, entity_dataloader: EntityDataLoader) -> None:
+    def __init__(self, dataloader: EntityDataLoader) -> None:
         self.order_rows: List[OrderRow] = []
-        self.entity_dataloader = entity_dataloader
+        self.dataloader = dataloader
         self.order_dataloader: Optional[CountDataLoader] = None
 
     def run(self):
 
         self.order_dataloader = self.load_orders()
 
-        manager = self.entity_dataloader.get_single_entity_instance(
+        manager = self.dataloader.get_single_entity_instance(
             entity=Manager, entity_identifier=MANAGER_ID
         )
         st.write(manager)
@@ -48,23 +47,25 @@ class OrderApp(HydraHeadApp):
         order_date, order_type, customer = self.select_fixed_order_variables()
         product, selected_quantity, entered_discount = self.get_item_details()
 
-        order_row = OrderRow(manager=manager,
-                             customer=customer,
-                             order_date=order_date,
-                             order_type=order_type,
-                             product=product,
-                             quantity=selected_quantity,
-                             discount=entered_discount)
+        if product is not None and customer is not None:
+            order_row = OrderRow(manager=manager,
+                                 customer=customer,
+                                 order_date=order_date,
+                                 order_type=order_type,
+                                 product=product,
+                                 quantity=selected_quantity,
+                                 discount=entered_discount)
 
-        if st.button('Add to order'):
-            st.session_state['order_rows'].append(order_row)
+            if st.button('Add to order'):
+                st.session_state['order_rows'].append(order_row)
+
         self.show_order_summary()
 
     def load_orders(self) -> CountDataLoader:
         table_info = fill_table_info_from_alias(
-            'order',
-            groupby='product_name',
-            aggregation_dict={'quantity': 'sum'})
+            OUTPUT_NAME,
+            groupby=GROUPBY_INVENTORY,
+            aggregation_dict=INVENTORY_AGGREGATION_DICT)
         self.order_table_info = CountTable(**table_info)
         loader = CountDataLoader([self.order_table_info])
         loader.load_data()
@@ -81,30 +82,19 @@ class OrderApp(HydraHeadApp):
                 order_type = st.selectbox('Order type', ORDER_TYPES)
 
             with customer_col:
-                if order_type in NEGATIVE_QUANTITY_TYPES:
-                    selected_customer = DEFAULT_CUSTOMER
-                else:
-                    selected_customer = get_entity_from_selectbox(
-                        Customer, self.entity_dataloader)
-                customer = self.entity_dataloader.get_single_entity_instance(
-                    Customer,
-                    entity_identifier=selected_customer,
-                    identifier_type='name')
+                customer = get_entity_from_selectbox(
+                    Customer, self.dataloader, add_default=False)
 
         return order_date, order_type, customer
 
     def get_item_details(self) -> Tuple[Product, int, float]:
         with st.container():
-            (product_col, quantity_col,
-             discount_col, inventory_col) = st.columns([4, 1, 1, 1])
+            product_col, quantity_col, discount_col = st.columns([4, 1, 1])
 
             with product_col:
-                selected_product = get_entity_from_selectbox(
-                    Product, self.entity_dataloader)
-                product = self.entity_dataloader.get_single_entity_instance(
-                    Product,
-                    entity_identifier=selected_product,
-                    identifier_type='name')
+                product = get_entity_from_selectbox(Product, self.dataloader)
+                if product:
+                    self.check_inventory(product.product_name)
 
             with quantity_col:
                 selected_quantity = st.number_input(
@@ -114,14 +104,11 @@ class OrderApp(HydraHeadApp):
                 entered_discount = st.number_input('Enter discount %', min_value=0.,
                                                    max_value=100., step=10.)
 
-            with inventory_col:
-                self.check_inventory(selected_product)
-
         return product, selected_quantity, entered_discount
 
     def check_inventory(self, selected_product: str) -> None:
-        if st.button('Check inventory'):
-            st.write(self.order_dataloader.data['order'].loc[selected_product])
+        quantity_left = self.order_dataloader.data['order'].loc[selected_product].values[0]
+        st.write(f'Left in stock: {quantity_left}')
 
     def show_order_summary(self):
         if len(st.session_state['order_rows']) > 0:
@@ -142,7 +129,8 @@ class OrderApp(HydraHeadApp):
                     submit = st.form_submit_button('Save order')
 
                 if submit:
-                    self.save_order(OUTPUT_PATH, order_df)
+                    output_path = get_output_path(OUTPUT_NAME)
+                    self.save_order(output_path, order_df)
                     st.session_state['order_rows'] = []
                     order_summary = st.empty()
 
@@ -159,7 +147,7 @@ class OrderApp(HydraHeadApp):
                           for order_row in order_rows)) \
             .pipe(self.add_order_amounts) \
             .reset_index(drop=True) \
-            .assign(order_id=str(uuid1()))[self.order_table_info.table_columns]
+            .assign(order_id=generate_id())[self.order_table_info.table_columns]
 
     @staticmethod
     def add_order_amounts(order_df: pd.DataFrame) -> pd.DataFrame:

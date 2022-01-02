@@ -11,7 +11,7 @@ class Entity:
 class Manager(Entity):
     manager_id: str
     manager_name: str
-    location: str
+    manager_location: str
 
 
 @dataclass
@@ -20,7 +20,7 @@ class Customer(Entity):
     customer_name: str
     address: str
     post_code: str
-    location: str
+    customer_location: str
     email: str
     telephone: str
     customer_code: str
