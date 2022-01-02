@@ -5,10 +5,11 @@ from abc import abstractmethod
 from src.entities import Entity
 from src.config import SEP, DATA_PATH, SORT_COLUMN, TABLE_FORMAT, ID_SUFFIX, \
     ENTITY_NAME_COLUMN_SUFFIX, COLUMN_NAME_SEPARATOR
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 import os
 import pandas as pd
 import streamlit as st
+from typing import Union
 
 log = Logger()
 
@@ -73,7 +74,7 @@ class EntityDataLoader(BaseDataLoader):
 
     def get_single_entity_instance(self, entity: Entity,
                                    entity_identifier: str,
-                                   identifier_type: str = 'id') -> Entity:
+                                   identifier_type: str = 'id') -> Union[Entity, None]:
         log(f"Fetching single {entity} data using {identifier_type}: {entity_identifier}")
         entity_name = entity.__name__.lower()
         table_info = self.table_info_dict[entity_name]
@@ -110,7 +111,7 @@ def fill_table_info_from_alias(alias: str,
     return table_info
 
 
-@st.cache
+@st.cache(allow_output_mutation=True)
 def preload_data(datasources: List[str]
                  ) -> EntityDataLoader:
     tables = [TableInfo(**fill_table_info_from_alias(table))
