@@ -1,5 +1,5 @@
 from src.io.loader import preload_data
-from src.apps import EntityAppTemplate, OrderApp, LoginApp
+from src.apps import EntityAppTemplate, OrderApp, LoginApp, DiscountApp
 from src.config import DATASOURCES
 from src.entities import Customer, Product
 import hydralit as hy
@@ -20,6 +20,8 @@ def main():
                                                   add_default=False))
     app.add_app('Product', app=EntityAppTemplate(entity=Product,
                                                  dataloader=st.session_state.entity_dataloader))
+    app.add_app('Discounts', app=DiscountApp(
+        product_dataloader=st.session_state.entity_dataloader))
 
     # Other pages have to be initialized before login, for redirecting after
     app.add_app('Login', app=LoginApp(),

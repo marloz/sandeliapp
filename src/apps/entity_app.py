@@ -1,7 +1,7 @@
 from .utils import get_entity_from_selectbox, generate_id, get_output_path, get_entity_name
 from src.io.loader import EntityDataLoader
 from src.entities import Entity
-from src.config import DEFAULT_VALUE, COLUMN_NAME_SEPARATOR, ID_SUFFIX
+from src.config import COLUMN_NAME_SEPARATOR, ID_SUFFIX
 from src.io.exporter import Exporter
 from hydralit import HydraHeadApp
 import streamlit as st

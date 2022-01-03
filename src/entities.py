@@ -12,6 +12,7 @@ class Manager(Entity):
     manager_id: str
     manager_name: str
     manager_location: str
+    access: str
 
 
 @dataclass
@@ -47,3 +48,12 @@ class OrderRow(Entity):
     order_type: str
     quantity: int
     discount: float
+
+
+@dataclass
+class Discount:
+    discount_level: str
+    discount_identifier: str
+    start_date: date
+    end_date: date
+    discount_percent: float

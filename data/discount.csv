@@ -1,0 +1,4 @@
+discount_id;discount_level;discount_identifier;start_date;end_date;discount;timestamp
+2365f4;product_name;Iphone 10;2022-01-01;2022-01-31;.10;2021-11-03 12:34:29.085482
+g454ega;product_category;Food;2022-01-01;2022-01-02;.05;2021-11-03 12:34:29.085482
+afE5r4fe;manufacturer;Samsung;2021-12-31;2021-12-31;.01;2021-11-03 12:34:29.085482
