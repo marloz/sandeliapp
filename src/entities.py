@@ -18,6 +18,8 @@ class Manager(Entity):
 class Customer(Entity):
     customer_id: str
     customer_name: str
+    customer_type: str
+    pricing_factor: float
     address: str
     post_code: str
     customer_location: str
@@ -31,7 +33,7 @@ class Customer(Entity):
 class Product(Entity):
     product_id: str
     product_name: str
-    unit_price: float
+    cost: float
     product_category: str
     manufacturer: str
 

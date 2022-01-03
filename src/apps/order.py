@@ -15,9 +15,9 @@ st.session_state['order_rows'] = []
 ORDER_SUMMARY_COLUMNS = [
     'product_name',
     'quantity',
-    'unit_price',
+    'price',
     'discount',
-    'unit_price_discount',
+    'price_with_discount',
     'sum',
     'sum_vat'
 ]
@@ -31,7 +31,6 @@ INVENTORY_AGGREGATION_DICT = {'quantity': 'sum'}
 class OrderApp(HydraHeadApp):
 
     def __init__(self, dataloader: EntityDataLoader) -> None:
-        self.order_rows: List[OrderRow] = []
         self.dataloader = dataloader
         self.order_dataloader: Optional[CountDataLoader] = None
 
@@ -45,7 +44,8 @@ class OrderApp(HydraHeadApp):
         st.write(manager)
 
         order_date, order_type, customer = self.select_fixed_order_variables()
-        product, selected_quantity, entered_discount = self.get_item_details()
+        product, selected_quantity, entered_discount = self.get_item_details(
+            customer)
 
         if product is not None and customer is not None:
             order_row = OrderRow(manager=manager,
@@ -87,7 +87,7 @@ class OrderApp(HydraHeadApp):
 
         return order_date, order_type, customer
 
-    def get_item_details(self) -> Tuple[Product, int, float]:
+    def get_item_details(self, customer: Customer) -> Tuple[Product, int, float]:
         with st.container():
             product_col, quantity_col, discount_col = st.columns([4, 1, 1])
 
@@ -95,6 +95,7 @@ class OrderApp(HydraHeadApp):
                 product = get_entity_from_selectbox(Product, self.dataloader)
                 if product:
                     self.check_inventory(product.product_name)
+                    self.calculate_price_for_customer(product, customer)
 
             with quantity_col:
                 selected_quantity = st.number_input(
@@ -109,6 +110,11 @@ class OrderApp(HydraHeadApp):
     def check_inventory(self, selected_product: str) -> None:
         quantity_left = self.order_dataloader.data['order'].loc[selected_product].values[0]
         st.write(f'Left in stock: {quantity_left}')
+
+    @staticmethod
+    def calculate_price_for_customer(product: Product, customer: Customer):
+        price = product.cost * customer.pricing_factor
+        st.write(f'Price for customer before discount/VAT: {price}')
 
     def show_order_summary(self):
         if len(st.session_state['order_rows']) > 0:
@@ -154,14 +160,13 @@ class OrderApp(HydraHeadApp):
         if order_df['order_type'].unique()[0] in NEGATIVE_QUANTITY_TYPES:
             order_df['quantity'] = order_df['quantity'] * -1
         return order_df.assign(
-            discount_amount=lambda x: x['unit_price'].mul(
-                x['discount']).div(100),
-            unit_price_vat=lambda x: x['unit_price'] * VAT,
-            unit_price_discount=lambda x: x['unit_price'].sub(
-                x['discount_amount']),
-            unit_price_discount_vat=lambda x: x['unit_price_discount'] * VAT,
-            sum=lambda x: x['unit_price_discount'] * x['quantity'],
-            sum_vat=lambda x: x['unit_price_discount_vat'] * x['quantity']
+            price=lambda x: x['cost'].mul(x['pricing_factor']),
+            discount_amount=lambda x: x['price'].mul(x['discount']).div(100),
+            price_with_vat=lambda x: x['price'] * VAT,
+            price_with_discount=lambda x: x['price'].sub(x['discount_amount']),
+            price_with_discount_vat=lambda x: x['price_with_discount'] * VAT,
+            sum=lambda x: x['price_with_discount'] * x['quantity'],
+            sum_vat=lambda x: x['price_with_discount_vat'] * x['quantity']
         )
 
     def save_order(self, output_path: str, order_df: pd.DataFrame) -> None:

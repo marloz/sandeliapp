@@ -23,6 +23,7 @@ class EntityAppTemplate(HydraHeadApp):
         new_entity_col, edit_entity_col = st.columns(2)
 
         with edit_entity_col:
+            st.write(f'Edit existing {self.entity_name} details')
             self.entity_to_edit = get_entity_from_selectbox(
                 self.entity, self.dataloader, add_default=self.add_default)
 

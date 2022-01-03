@@ -10,9 +10,12 @@ DATA_PATH: str = os.path.join(
 
 # Order
 VAT: float = 1.21  # VAT tax applied in Order
-ORDER_TYPES = ['regular',
+ORDER_TYPES = ['sale',
+               'consignment',
+               'consignment sale',
                'return',
                'credit',
+               'discount',
                'stock refill']
 
 # Data loader
