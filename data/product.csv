@@ -3,3 +3,4 @@ product_id;product_name;cost;product_category;manufacturer;timestamp
 '2';Galaxy 13;2000.;Phone;Samsung;'2021-12-02 12:34:29.085482'
 '3';Bacon;10.;Food;Old McDonald's;'2021-11-03 12:34:29.085482'
 e3bfd4ad-6224-11ec-8658-181dea3bd7cd;Pizza;5.2;Food;Luigi;'2021-12-21 08:11:52.099731'
+'1';Iphone 10;1000.0;Phone;Applez;2022-01-04 18:53:38.121497

@@ -2,7 +2,7 @@ from hydralit import HydraHeadApp
 import streamlit as st
 
 from src.io.loader import EntityDataLoader
-from .utils import get_entity_name, get_output_path
+from .utils import generate_id, get_entity_name, get_output_path, save_entity
 from src.entities import Product, Discount
 
 from enum import Enum, auto
@@ -48,19 +48,16 @@ class DiscountApp(HydraHeadApp):
                 discount_percent = st.number_input(
                     'Discount percent', min_value=0., max_value=100.)
 
-            discount = Discount(discount_level=discount_level,
+            discount = Discount(discount_id=generate_id(),
+                                discount_level=discount_level,
                                 discount_identifier=discount_identifier,
                                 start_date=start_date,
                                 end_date=end_date,
                                 discount_percent=discount_percent)
 
-            self.save(discount)
+            output_path = get_output_path(get_entity_name(discount))
+            save_entity(discount, output_path=output_path)
 
     def get_discount_identifiers(self, discount_level: str):
         product_table_name = get_entity_name(Product)
         return set(self.product_dataloader.data[product_table_name][discount_level])
-
-    def save(self, discount: Discount):
-        if st.button(f'Save {str(self)}'):
-            output_path = get_output_path(str(self))
-            st.write(f'{discount} exported to {output_path}')

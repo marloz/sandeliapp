@@ -1,16 +1,16 @@
-from .utils import get_entity_from_selectbox, generate_id, get_output_path, get_entity_name
+from .utils import get_entity_from_selectbox, generate_id, get_output_path, get_entity_name, save_entity
 from src.io.loader import EntityDataLoader
 from src.entities import Entity
 from src.config import COLUMN_NAME_SEPARATOR, ID_SUFFIX
 from src.io.exporter import Exporter
 from hydralit import HydraHeadApp
 import streamlit as st
-from typing import Optional, Union
+from typing import Optional, Union, Type
 
 
 class EntityAppTemplate(HydraHeadApp):
 
-    def __init__(self, entity: Entity,
+    def __init__(self, entity: Type[Entity],
                  dataloader: EntityDataLoader,
                  add_default: bool = True):
         self.entity = entity
@@ -30,7 +30,9 @@ class EntityAppTemplate(HydraHeadApp):
         with new_entity_col:
             self.entity = self.fill_in_entity_details()
 
-        self.save()
+        output_path = get_output_path(self.entity_name)
+        save_entity(self.entity, output_path)
+        self.dataloader.load_data()
 
     def fill_in_entity_details(self) -> Union[Entity, None]:
         st.write(f'Fill in new {self.entity_name} details')
@@ -48,10 +50,3 @@ class EntityAppTemplate(HydraHeadApp):
             for attribute_name, attribute_type in self.entity.__annotations__.items()
         }
         return self.entity(**entity_info_dict)
-
-    def save(self):
-        if st.button(f'Save {self.entity_name}'):
-            output_path = get_output_path(self.entity_name)
-            Exporter(self.entity).export(output_path)
-            st.write(f'{self.entity} exported to database {output_path}')
-            self.dataloader.load_data()

@@ -8,6 +8,11 @@ class Entity:
 
 
 @dataclass
+class Foo(Entity):
+    id: str
+
+
+@dataclass
 class Manager(Entity):
     manager_id: str
     manager_name: str
@@ -51,7 +56,8 @@ class OrderRow(Entity):
 
 
 @dataclass
-class Discount:
+class Discount(Entity):
+    discount_id: str
     discount_level: str
     discount_identifier: str
     start_date: date
