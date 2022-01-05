@@ -36,7 +36,8 @@ class Exporter:
     def export(self, output_path: str) -> None:
         log(f'Exporting {str(self.entity)} to {output_path}')
         df = self.prepare_for_export()
-        self.write(df, output_path)
+        cols = pd.read_csv(output_path, sep=SEP, nrows=0).columns.tolist()
+        self.write(df[cols], output_path)
 
     def prepare_for_export(self) -> pd.DataFrame:
         return (self._to_df(self._serialize(self.entity))

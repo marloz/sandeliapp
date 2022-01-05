@@ -1,15 +1,15 @@
 from src.logger import Logger
 from pydantic.dataclasses import dataclass
 from dataclasses import field
-from abc import abstractmethod
 from src.entities import Entity
-from src.config import SEP, DATA_PATH, SORT_COLUMN, TABLE_FORMAT, ID_SUFFIX, \
+from src.config import DATE_FORMAT, SEP, DATA_PATH, SORT_COLUMN, TABLE_FORMAT, ID_SUFFIX, \
     ENTITY_NAME_COLUMN_SUFFIX, COLUMN_NAME_SEPARATOR
 from typing import List, Dict, Any, Optional
 import os
 import pandas as pd
 import streamlit as st
 from typing import Union
+from datetime import date
 
 log = Logger()
 
@@ -48,11 +48,6 @@ class BaseDataLoader:
     def load_table(table_name: str) -> pd.DataFrame:
         log(f"Loading data from: {table_name}")
         return pd.read_csv(table_name, sep=SEP)
-
-    @abstractmethod
-    def process_table(self, df: pd.DataFrame, table_info: TableInfo) -> pd.DataFrame:
-        log("Processing loaded table...")
-        pass
 
 
 class EntityDataLoader(BaseDataLoader):
@@ -97,8 +92,8 @@ class CountDataLoader(BaseDataLoader):
 
 
 def fill_table_info_from_alias(alias: str,
-                               data_path: Optional[str] = DATA_PATH, **optional_kwargs
-                               ) -> Dict[str, Any]:
+                               data_path: Optional[str] = DATA_PATH,
+                               **optional_kwargs) -> Dict[str, Any]:
     table_info = dict(
         alias=alias,
         path=os.path.join(data_path, ".".join([alias, TABLE_FORMAT])),
@@ -119,3 +114,24 @@ def preload_data(datasources: List[str]
     data_loader = EntityDataLoader(tables)
     data_loader.load_data()
     return data_loader
+
+
+START_DATE_COLUMN, END_DATE_COLUMN = 'start_date', 'end_date'
+
+
+@dataclass
+class DiscountTable(TableInfo):
+    filter_date: date
+    start_date_column: str = START_DATE_COLUMN
+    end_date_column: str = END_DATE_COLUMN
+
+
+class DiscountDataLoader(BaseDataLoader):
+    def __init__(self, tables: List[DiscountTable]) -> None:
+        super().__init__(tables)
+
+    def process_table(self, df: pd.DataFrame, table_info: DiscountTable) -> pd.DataFrame:
+        filter_date = table_info.filter_date.strftime(DATE_FORMAT)
+        log(f'Loading active discounts on date: {filter_date}')
+        return df.loc[lambda x: (x[table_info.start_date_column] <= filter_date)
+                      & (x[table_info.end_date_column] >= filter_date)]

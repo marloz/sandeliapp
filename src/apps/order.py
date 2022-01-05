@@ -1,6 +1,7 @@
-from .utils import get_entity_from_selectbox, generate_id, get_output_path
-from src.entities import Customer, Manager, Product, OrderRow, Entity
-from src.io.loader import CountDataLoader, CountTable, EntityDataLoader, fill_table_info_from_alias
+from threading import active_count
+from .utils import get_entity_from_selectbox, generate_id, get_entity_name, get_output_path
+from src.entities import Customer, Discount, Manager, Product, OrderRow, Entity
+from src.io.loader import CountDataLoader, CountTable, DiscountDataLoader, DiscountTable, EntityDataLoader, fill_table_info_from_alias
 from src.io.exporter import Exporter
 from src.config import ORDER_TYPES, VAT
 
@@ -32,10 +33,10 @@ class OrderApp(HydraHeadApp):
 
     def __init__(self, dataloader: EntityDataLoader) -> None:
         self.dataloader = dataloader
-        self.order_dataloader: Optional[CountDataLoader] = None
 
     def run(self):
 
+        # TODO: include these in a single dataloader
         self.order_dataloader = self.load_orders()
 
         manager = self.dataloader.get_single_entity_instance(
@@ -71,12 +72,22 @@ class OrderApp(HydraHeadApp):
         loader.load_data()
         return loader
 
+    def load_discounts(self, order_date: date) -> DiscountDataLoader:
+        entity_name = get_entity_name(Discount)
+        discount_table_dict = fill_table_info_from_alias(
+            entity_name, filter_date=order_date)
+        self.discount_table_info = DiscountTable(**discount_table_dict)
+        loader = DiscountDataLoader([self.discount_table_info])
+        loader.load_data()
+        return loader
+
     def select_fixed_order_variables(self) -> Tuple[date, str, str]:
         with st.container():
             date_col, type_col, customer_col = st.columns([1, 1, 4])
 
             with date_col:
                 order_date = st.date_input('Order date')
+                self.discount_dataloader = self.load_discounts(order_date)
 
             with type_col:
                 order_type = st.selectbox('Order type', ORDER_TYPES)
@@ -96,6 +107,7 @@ class OrderApp(HydraHeadApp):
                 if product:
                     self.check_inventory(product.product_name)
                     self.calculate_price_for_customer(product, customer)
+                    self.show_active_discount(product)
 
             with quantity_col:
                 selected_quantity = st.number_input(
@@ -108,13 +120,27 @@ class OrderApp(HydraHeadApp):
         return product, selected_quantity, entered_discount
 
     def check_inventory(self, selected_product: str) -> None:
-        quantity_left = self.order_dataloader.data['order'].loc[selected_product].values[0]
+        quantity_left = self.order_dataloader.data[OUTPUT_NAME].loc[selected_product].values[0]
         st.write(f'Left in stock: {quantity_left}')
 
     @staticmethod
     def calculate_price_for_customer(product: Product, customer: Customer):
-        price = product.cost * customer.pricing_factor
+        price = round(product.cost * customer.pricing_factor, 2)
         st.write(f'Price for customer before discount/VAT: {price}')
+
+    def show_active_discount(self, product: Product) -> None:
+        discount_df = self.discount_dataloader.data[get_entity_name(Discount)]
+
+        def discount_condition(x):
+            return (x['discount_identifier'] == product.product_name) \
+                | (x['discount_identifier'] == product.product_category) \
+                | (x['discount_identifier'] == product.manufacturer)
+        columns_to_show = ['discount_identifier',
+                           'discount_level',
+                           'discount_percent']
+        active_discounts = discount_df.loc[discount_condition, columns_to_show]
+        st.write(f'Active discounts for selected product:')
+        st.write(active_discounts)
 
     def show_order_summary(self):
         if len(st.session_state['order_rows']) > 0:

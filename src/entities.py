@@ -8,11 +8,6 @@ class Entity:
 
 
 @dataclass
-class Foo(Entity):
-    id: str
-
-
-@dataclass
 class Manager(Entity):
     manager_id: str
     manager_name: str
