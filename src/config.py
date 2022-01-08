@@ -33,3 +33,7 @@ DATASOURCES = ['customer', 'product', 'manager', 'order']
 
 # has to be added to DB as first entry
 DEFAULT_VALUE = 'default'
+
+# Database
+DATABASE = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), os.sep.join(['database', 'sandeliapp.db']))
