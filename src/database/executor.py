@@ -1,4 +1,4 @@
-from src.config import DATABASE
+from config.paths import DATABASE
 import sqlite3
 from traceback import print_exception
 
