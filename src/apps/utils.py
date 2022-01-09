@@ -1,49 +1,47 @@
 from src.entities import Entity
-from src.io.loader import EntityDataLoader
-from src.io.exporter import Exporter
-from src.config import DEFAULT_VALUE, DATA_PATH, TABLE_FORMAT
-import streamlit as st
+from src.config import DEFAULT_VALUE
+
 from uuid import uuid1
-import os
 from typing import Union, Type
 
-
-def get_entity_name_from_selectbox(entity_name: str, dataloader: EntityDataLoader,
-                                   add_default: bool = True) -> str:
-    table_info = dataloader.table_info_dict[entity_name]
-    entity_list = dataloader.data[entity_name][table_info.name_column] \
-        .tolist()
-    entity_list = [DEFAULT_VALUE] + entity_list if add_default else entity_list
-    selected_entity = st.selectbox(f'Select {entity_name}', entity_list)
-    return selected_entity
+import streamlit as st
+import pandas as pd
 
 
-def get_entity_name(entity: Union[Entity, Type[Entity]]) -> str:
-    entity = entity if isinstance(entity, type) else entity.__class__
-    return entity.__name__.lower()
+def get_value_from_selectbox(values: pd.Series,
+                             add_default: bool = True) -> str:
+    value_list = values.tolist()
+    value_list = [DEFAULT_VALUE] + value_list if add_default else value_list
+    selected_value = st.selectbox(f'Select {values.name}', value_list)
+    return selected_value
 
 
-def get_entity_from_selectbox(entity: Entity, dataloader: EntityDataLoader,
+def get_entity_from_df(entity_type: Type[Entity],
+                       df: pd.DataFrame,
+                       entity_identifier_column: str,
+                       entity_identifier: str) -> Entity:
+    required_columns = entity_type.attribute_list()
+    entity_df = (df.loc[lambda x: x[entity_identifier_column] == entity_identifier,
+                        required_columns])
+    entity_dict = entity_df.to_dict("records")[0]
+    return entity_type(**entity_dict)
+
+
+def get_entity_from_selectbox(entity_type: Type[Entity],
+                              df: pd.DataFrame,
+                              entity_identifier_column: str,
                               add_default: bool = True) -> Union[Entity, None]:
-    selected_entity = get_entity_name_from_selectbox(entity_name=get_entity_name(entity),
-                                                     dataloader=dataloader,
-                                                     add_default=add_default)
-    if selected_entity != DEFAULT_VALUE:
-        return dataloader.get_single_entity_instance(entity, selected_entity, identifier_type='name')
+    values = df[entity_identifier_column]
+    entity_identifier = get_value_from_selectbox(values=values,
+                                                 add_default=add_default)
+    if entity_identifier != DEFAULT_VALUE:
+        return get_entity_from_df(entity_type=entity_type,
+                                  df=df,
+                                  entity_identifier_column=entity_identifier_column,
+                                  entity_identifier=entity_identifier)
     else:
         return None
 
 
-def get_output_path(entity_name: str) -> str:
-    return os.path.join(DATA_PATH, '.'.join([entity_name, TABLE_FORMAT]))
-
-
 def generate_id(len: int = 10) -> str:
     return str(uuid1())[:len]
-
-
-def save_entity(entity: Entity, output_path: str) -> None:
-    entity_name = get_entity_name(entity)
-    if st.button(f'Save {entity_name}'):
-        Exporter(entity).export(output_path)
-        st.write(f'{entity} exported to database {output_path}')

@@ -1,10 +1,29 @@
+from abc import ABC
+from typing import Dict
 from pydantic.dataclasses import dataclass
 from datetime import date
 
 
 @dataclass
-class Entity:
-    ...
+class Entity(ABC):
+
+    @classmethod
+    def attribute_list(cls) -> list[str]:
+        return list(cls.__annotations__.keys())
+
+    @classmethod
+    def name(cls) -> str:
+        return cls.__name__.lower()
+
+    @classmethod
+    def schema(cls) -> Dict[str, type]:
+        return dict(cls.__annotations__)
+
+
+@dataclass
+class Foo(Entity):
+
+    some_id: str
 
 
 @dataclass

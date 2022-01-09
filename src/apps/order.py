@@ -1,4 +1,3 @@
-from threading import active_count
 from .utils import get_entity_from_selectbox, generate_id, get_entity_name, get_output_path
 from src.entities import Customer, Discount, Manager, Product, OrderRow, Entity
 from src.io.loader import CountDataLoader, CountTable, DiscountDataLoader, DiscountTable, EntityDataLoader, fill_table_info_from_alias

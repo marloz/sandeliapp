@@ -1,5 +1,0 @@
-order_id;order_date;order_type;manager_id;manager_name;manager_location;customer_id;customer_name;product_id;product_name;product_category;manufacturer;quantity;price;discount;discount_amount;price_with_vat;price_with_discount;price_with_discount_vat;sum;sum_vat;timestamp
-5fb5ca2d;2021-12-28;stock refill;some_email@medexy.lt;Mother Theresa;Vilnius;377d25a0;default;e3bfd4a0;Iphone 10;Phone;Apple;-10;1000.0;0.0;0.0;1210.0;1000.0;1210.0;-10000.0;-12100.0;2021-12-28 15:45:09.748655
-6e4f0b3c;2021-12-28;stock refill;some_email@medexy.lt;Mother Theresa;Vilnius;377d25a0;default;e3bfd4a1;Galaxy 13;Phone;Samsung;-10;2000.0;0.0;0.0;2420.0;2000.0;2420.0;-20000.0;-24200.0;2021-12-28 15:45:34.243169
-727d8f57;2021-12-28;stock refill;some_email@medexy.lt;Mother Theresa;Vilnius;377d25a0;default;e3bfd4a2;Bacon;Food;Old McDonald's;-10;10.0;0.0;0.0;12.1;10.0;12.1;-100.0;-121.0;2021-12-28 15:45:41.260867
-7636a704;2021-12-28;stock refill;some_email@medexy.lt;Mother Theresa;Vilnius;377d25a0;default;e3bfd4ad;Pizza;Food;Luigi;-10;5.2;0.0;0.0;6.292;5.2;6.292;-52.0;-62.92;2021-12-28 15:45:47.502062
