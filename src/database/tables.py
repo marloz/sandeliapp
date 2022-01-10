@@ -24,8 +24,8 @@ class BaseTable(ABC):
 
     def get_table_columns(self) -> List[str]:
         with SqlExecutor() as executor:
-            sql = f"""SELECT TOP 1 * FROM {self.table_name}"""
-            return pd.read_sql(sql, con=executor.connection, nrows=0).columns.tolist()
+            sql = f"""SELECT * FROM {self.table_name} LIMIT 1"""
+            return pd.read_sql(sql, con=executor.connection).columns.tolist()
 
 
 @dataclass

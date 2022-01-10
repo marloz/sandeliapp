@@ -1,11 +1,11 @@
-from src.apps import EntityApp
-# OrderApp, LoginApp, DiscountApp
-from src.entities import Customer, Product
+from src.apps import EntityApp, DiscountApp, OrderApp
+from src.entities import Customer, Discount, Orders, Product
 from src.database.tables import ManagerTable, CustomerTable, ProductTable, DiscountTable, OrdersTable
 from src.database.loader import preload_data
 import hydralit as hy
 import streamlit as st
-from src.apps.home import HomeApp
+
+MANAGER_ID = 'some_email@medexy.lt'
 
 
 def main():
@@ -16,15 +16,24 @@ def main():
     st.session_state.dataloader = preload_data(tables)
 
     # app.add_app('Home', app=HomeApp(), is_home=True)
-    # app.add_app("Order", app=OrderApp(
-    #     dataloader=st.session_state.entity_dataloader))
+
+    # TODO: this is set in login page
+    st.session_state.current_user = MANAGER_ID
+    order_app = OrderApp(entity_type=Orders,
+                         dataloader=st.session_state.dataloader)
+    app.add_app("Order", app=order_app)
+
     entity_app = EntityApp(entity_type=Customer,
                            dataloader=st.session_state.dataloader)
     app.add_app("Customer", app=entity_app)
-    # app.add_app('Product', app=EntityAppTemplate(entity=Product,
-    #                                              dataloader=st.session_state.entity_dataloader))
-    # app.add_app('Discounts', app=DiscountApp(
-    #     product_dataloader=st.session_state.entity_dataloader))
+
+    product_app = EntityApp(entity_type=Product,
+                            dataloader=st.session_state.dataloader)
+    app.add_app('Product', app=product_app)
+
+    discount_app = DiscountApp(
+        entity_type=Discount, dataloader=st.session_state.dataloader)
+    app.add_app('Discounts', app=discount_app)
 
     # Other pages have to be initialized before login, for redirecting after
     # app.add_app('Login', app=LoginApp(),

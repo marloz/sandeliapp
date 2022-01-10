@@ -24,6 +24,7 @@ class EntityApp(AppTemplate):
             entity = self.fill_in_entity_details()
 
         entity_df = self.entity_processor().process([entity])
-        st.write(entity_df)
 
-        self.save_entity_df(entity_df, output_table=self.output_table)
+        if st.button(f'Save {self.output_table.name}'):
+            self.save_entity_df(entity_df, output_table=self.output_table)
+            self.dataloader.update(self.output_table)

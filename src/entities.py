@@ -21,12 +21,6 @@ class Entity(ABC):
 
 
 @dataclass
-class Foo(Entity):
-
-    some_id: str
-
-
-@dataclass
 class Manager(Entity):
     manager_id: str
     manager_name: str
@@ -59,7 +53,7 @@ class Product(Entity):
 
 
 @dataclass
-class OrderRow(Entity):
+class Orders(Entity):
     manager: Manager
     customer: Customer
     product: Product

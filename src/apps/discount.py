@@ -1,11 +1,13 @@
-from hydralit import HydraHeadApp
+from .app_template import AppTemplate
+from .utils import generate_id
+from src.database.loader import Loader
+from src.database.tables import ProductTable
+from src.entities import Entity, Discount
+
 import streamlit as st
 
-from src.io.loader import EntityDataLoader
-from .utils import generate_id, get_entity_name, get_output_path, save_entity
-from src.entities import Product, Discount
-
 from enum import Enum, auto
+from typing import Type
 
 
 class DiscountLevel(Enum):
@@ -14,13 +16,12 @@ class DiscountLevel(Enum):
     manufacturer = auto()
 
 
-class DiscountApp(HydraHeadApp):
+class DiscountApp(AppTemplate):
 
-    def __init__(self, product_dataloader: EntityDataLoader):
-        self.product_dataloader = product_dataloader
-
-    def __str__(self):
-        return self.__class__.__name__.replace('App', '').lower()
+    def __init__(self, entity_type: Type[Entity],
+                 dataloader: Loader):
+        super().__init__(entity_type, dataloader)
+        self.product_dataloader = dataloader
 
     def run(self):
         with st.container():
@@ -33,8 +34,8 @@ class DiscountApp(HydraHeadApp):
                     'Discount level', discount_levels)
 
             with discount_identifier_col:
-                discount_identifiers = self.get_discount_identifiers(
-                    discount_level)
+                product_df = self.product_dataloader.data[ProductTable.table_name]
+                discount_identifiers = set(product_df[discount_level])
                 discount_identifier = st.selectbox(
                     'Discount identifier', discount_identifiers)
 
@@ -55,9 +56,9 @@ class DiscountApp(HydraHeadApp):
                                 end_date=end_date,
                                 discount_percent=discount_percent)
 
-            output_path = get_output_path(get_entity_name(discount))
-            save_entity(discount, output_path=output_path)
+            discount_df = self.entity_processor().process([discount])
 
-    def get_discount_identifiers(self, discount_level: str):
-        product_table_name = get_entity_name(Product)
-        return set(self.product_dataloader.data[product_table_name][discount_level])
+            if st.button(f'Save {self.output_table.table_name}'):
+                self.save_entity_df(
+                    discount_df, output_table=self.output_table)
+                self.dataloader.update(self.output_table)

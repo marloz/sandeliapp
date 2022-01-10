@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from .utils import get_entity_from_selectbox, generate_id
+from .utils import get_entity_from_selectbox, generate_id, get_entity_identifier_column
 from src.database.loader import Loader
 from src.database.tables import BaseTable
 from src.database.exporter import Exporter
@@ -32,14 +32,12 @@ class AppTemplate(HydraHeadApp):
         ...
 
     def select_entity_to_edit(self) -> Union[Entity, None]:
-        entity_identifier_column = COLUMN_NAME_SEPARATOR.join(
-            [self.entity_type_name, 'name'])
+        entity_identifier_column = get_entity_identifier_column(Entity, 'name')
         st.write(f'Edit existing {self.entity_type_name} details')
         return get_entity_from_selectbox(
             entity_type=self.entity_type,
             df=self.dataloader.data[self.entity_type_name],
-            entity_identifier_column=entity_identifier_column,
-            add_default=False)
+            entity_identifier_column=entity_identifier_column)
 
     def fill_in_entity_details(self) -> Union[Entity, None]:
         st.write(f'Fill in new {self.entity_type_name} details')
@@ -64,7 +62,5 @@ class AppTemplate(HydraHeadApp):
 
     @staticmethod
     def save_entity_df(entity_df: pd.DataFrame, output_table: BaseTable) -> None:
-        table_name = output_table.table_name
-        if st.button(f'Save {table_name}'):
-            Exporter().append_df_to_database(entity_df, output_table)
-            st.success(f'Exported to {table_name} table')
+        Exporter().append_df_to_database(entity_df, output_table)
+        st.success(f'Exported to {output_table.table_name} table')
