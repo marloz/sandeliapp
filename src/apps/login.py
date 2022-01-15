@@ -21,7 +21,7 @@ class LoginApp(HydraHeadApp):
         """
 
         st.markdown(
-            "<h1 style='text-align: center;'>Secure Hydralit Login</h1>", unsafe_allow_html=True)
+            "<h1 style='text-align: center;'>Login</h1>", unsafe_allow_html=True)
 
         _, column = st.columns([2, 2])
 

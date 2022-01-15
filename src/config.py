@@ -10,9 +10,12 @@ DATA_PATH: str = os.path.join(
 
 # Order
 VAT: float = 1.21  # VAT tax applied in Order
-ORDER_TYPES = ['regular',
+ORDER_TYPES = ['sale',
+               'consignment',
+               'consignment sale',
                'return',
                'credit',
+               'discount',
                'stock refill']
 
 # Data loader
@@ -30,3 +33,7 @@ DATASOURCES = ['customer', 'product', 'manager', 'order']
 
 # has to be added to DB as first entry
 DEFAULT_VALUE = 'default'
+
+# Database
+DATABASE = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), os.sep.join(['database', 'sandeliapp.db']))

@@ -1,10 +1,23 @@
+from abc import ABC
+from typing import Dict
 from pydantic.dataclasses import dataclass
 from datetime import date
 
 
 @dataclass
-class Entity:
-    ...
+class Entity(ABC):
+
+    @classmethod
+    def attribute_list(cls) -> list[str]:
+        return list(cls.__annotations__.keys())
+
+    @classmethod
+    def name(cls) -> str:
+        return cls.__name__.lower()
+
+    @classmethod
+    def schema(cls) -> Dict[str, type]:
+        return dict(cls.__annotations__)
 
 
 @dataclass
@@ -12,12 +25,15 @@ class Manager(Entity):
     manager_id: str
     manager_name: str
     manager_location: str
+    access: str
 
 
 @dataclass
 class Customer(Entity):
     customer_id: str
     customer_name: str
+    customer_type: str
+    pricing_factor: float
     address: str
     post_code: str
     customer_location: str
@@ -31,13 +47,13 @@ class Customer(Entity):
 class Product(Entity):
     product_id: str
     product_name: str
-    unit_price: float
+    cost: float
     product_category: str
     manufacturer: str
 
 
 @dataclass
-class OrderRow(Entity):
+class Orders(Entity):
     manager: Manager
     customer: Customer
     product: Product
@@ -45,3 +61,13 @@ class OrderRow(Entity):
     order_type: str
     quantity: int
     discount: float
+
+
+@dataclass
+class Discount(Entity):
+    discount_id: str
+    discount_level: str
+    discount_identifier: str
+    start_date: date
+    end_date: date
+    discount_percent: float
