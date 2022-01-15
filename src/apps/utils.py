@@ -2,7 +2,7 @@ from src.config import COLUMN_NAME_SEPARATOR
 from src.entities import Entity
 
 from uuid import uuid1
-from typing import Optional, Type, Union
+from typing import Type, Union
 
 import streamlit as st
 import pandas as pd
@@ -46,5 +46,5 @@ def generate_id(len: int = 10) -> str:
     return str(uuid1())[: len]
 
 
-def get_entity_identifier_column(entity: Entity, identifier_type: str) -> str:
-    return COLUMN_NAME_SEPARATOR.join([entity.name(), identifier_type])
+def get_entity_identifier_column(entity_type: Type[Entity], identifier_type: str) -> str:
+    return COLUMN_NAME_SEPARATOR.join([entity_type.name(), identifier_type])

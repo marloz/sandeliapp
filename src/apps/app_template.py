@@ -32,7 +32,8 @@ class AppTemplate(HydraHeadApp):
         ...
 
     def select_entity_to_edit(self) -> Union[Entity, None]:
-        entity_identifier_column = get_entity_identifier_column(Entity, 'name')
+        entity_identifier_column = get_entity_identifier_column(
+            self.entity_type, 'name')
         st.write(f'Edit existing {self.entity_type_name} details')
         return get_entity_from_selectbox(
             entity_type=self.entity_type,
@@ -60,7 +61,7 @@ class AppTemplate(HydraHeadApp):
         }
         return self.entity_type(**entity_info_dict)
 
-    @staticmethod
+    @ staticmethod
     def save_entity_df(entity_df: pd.DataFrame, output_table: BaseTable) -> None:
         Exporter().append_df_to_database(entity_df, output_table)
         st.success(f'Exported to {output_table.table_name} table')
