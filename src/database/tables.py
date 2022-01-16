@@ -1,9 +1,7 @@
 from config.formats import DATE_FORMAT
-from .loader import SqlExecutor
 
 from abc import ABC
 from pydantic.dataclasses import dataclass
-import pandas as pd
 from dataclasses import field
 from typing import List, Dict, Any
 from datetime import datetime, date
@@ -21,11 +19,6 @@ class BaseTable(ABC):
 
     def argument_dict(self) -> Dict[str, Any]:
         return {k: v for k, v in self.__dict__.items() if k not in NON_ARGUMENT_ATTRS}
-
-    def get_table_columns(self) -> List[str]:
-        with SqlExecutor() as executor:
-            sql = f"""SELECT * FROM {self.table_name} LIMIT 1"""
-            return pd.read_sql(sql, con=executor.connection).columns.tolist()
 
 
 @dataclass
