@@ -3,7 +3,7 @@ from .summary import show_order_summary
 from ..utils import get_entity_from_selectbox, get_entity_from_df, get_entity_identifier_column
 from ..app_template import AppTemplate
 from src.database.loader import Loader
-from src.entities import Customer, Manager, Product, Orders, Entity
+from src.entities import Customer, Manager, Product, Orders, Entity, OrderType
 
 import streamlit as st
 
@@ -11,16 +11,6 @@ from datetime import date
 from typing import Tuple, Type
 
 st.session_state['order_rows'] = []
-
-
-ORDER_TYPES = [
-    'sale',
-    'consignment',
-    'consignment sale',
-    'return',
-    'credit',
-    'discount',
-    'stock refill']
 
 
 class OrderApp(AppTemplate):
@@ -81,7 +71,8 @@ class OrderApp(AppTemplate):
                 order_date = st.date_input('Order date')
 
             with type_col:
-                order_type = st.selectbox('Order type', ORDER_TYPES)
+                order_type = st.selectbox(
+                    'Order type', [e.value for e in OrderType])
 
             with customer_col:
                 df = self.dataloader.data[Customer.name()]

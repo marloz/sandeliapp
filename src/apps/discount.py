@@ -2,19 +2,12 @@ from .app_template import AppTemplate
 from .utils import generate_id
 from src.database.loader import Loader
 from src.database.tables import DiscountTable, ProductTable
-from src.entities import Entity, Discount
+from src.entities import Entity, Discount, DiscountLevel
 
 import streamlit as st
 import pandas as pd
 
-from enum import Enum, auto
 from typing import Type
-
-
-class DiscountLevel(Enum):
-    product_name = auto()
-    product_category = auto()
-    manufacturer = auto()
 
 
 class DiscountApp(AppTemplate):

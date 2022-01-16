@@ -23,7 +23,7 @@ class ProductInfo:
 
     @staticmethod
     def calculate_price_for_customer(product: Product, customer: Customer):
-        price = round(product.cost * customer.pricing_factor, 2)
+        price = round(product.cost * customer.pricing_factor.value, 2)
         st.write(f'Price for customer before discount/VAT: {price}')
 
     def show_active_discount(self, product: Product) -> None:

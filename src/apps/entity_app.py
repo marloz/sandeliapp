@@ -1,6 +1,6 @@
 from .app_template import AppTemplate
 from src.database.loader import Loader
-from src.entities import Entity
+from src.entities import Entity, AccessLevel
 
 import streamlit as st
 
@@ -17,8 +17,9 @@ class EntityApp(AppTemplate):
     def run(self):
         new_entity_col, edit_entity_col = st.columns(2)
 
-        with edit_entity_col:
-            self.entity_to_edit = self.select_entity_to_edit()
+        if st.session_state.current_user_access != AccessLevel.user.value:
+            with edit_entity_col:
+                self.entity_to_edit = self.select_entity_to_edit()
 
         with new_entity_col:
             entity = self.fill_in_entity_details()
