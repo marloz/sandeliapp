@@ -3,7 +3,6 @@ from src.database.loader import Loader
 from src.entities import Customer, Discount, Orders, Product
 
 import streamlit as st
-from typing import Optional
 
 
 class ProductInfo:

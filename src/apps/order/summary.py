@@ -33,7 +33,7 @@ def show_order_summary(order_df: pd.DataFrame) -> bool:
     with summary_col:
         order_summary = st.empty()
         with order_summary.form('Summary'):
-            st.header('Order summary')
+            st.header(f'Order summary: {order_df.order_id[0]}')
             st.write(order_df[ORDER_SUMMARY_COLUMNS]
                      .style.format(precision=2))
             submitted = st.form_submit_button('Save order')
