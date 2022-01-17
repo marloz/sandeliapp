@@ -4,6 +4,7 @@ from ..utils import get_entity_from_selectbox, get_entity_from_df, get_entity_id
 from ..app_template import AppTemplate
 from src.database.loader import Loader
 from src.entities import Customer, Manager, Product, Orders, Entity, OrderType
+from src.database.tables import BaseTable, CustomerTable, ManagerTable, OrdersTable, ProductTable
 
 import streamlit as st
 
@@ -16,13 +17,17 @@ st.session_state['order_rows'] = []
 class OrderApp(AppTemplate):
 
     def __init__(self, entity_type: Type[Entity],
+                 output_table: BaseTable,
                  dataloader: Loader) -> None:
-        super().__init__(entity_type, dataloader)
+        super().__init__(entity_type, output_table, dataloader)
 
     def run(self):
         product, customer = None, None
 
         manager = self.write_manager_info()
+
+        self.download_data()
+
         order_date, order_type, customer = self.date_order_type_and_customer_selection()
 
         if customer:
@@ -55,7 +60,7 @@ class OrderApp(AppTemplate):
     def write_manager_info(self: Loader) -> Manager:
         manager = get_entity_from_df(
             entity_type=Manager,
-            df=self.dataloader.data[Manager.name()],
+            df=self.dataloader.data[ManagerTable.name()],
             entity_identifier_column=get_entity_identifier_column(
                 Manager, 'id'),
             entity_identifier=st.session_state.current_user)
@@ -74,7 +79,7 @@ class OrderApp(AppTemplate):
                     'Order type', [e.value for e in OrderType])
 
             with customer_col:
-                df = self.dataloader.data[Customer.name()]
+                df = self.dataloader.data[CustomerTable.name()]
                 entity_identifier_column = get_entity_identifier_column(Customer,
                                                                         'name')
                 customer = get_entity_from_selectbox(
@@ -93,7 +98,7 @@ class OrderApp(AppTemplate):
             with product_col:
                 product = get_entity_from_selectbox(
                     entity_type=Product,
-                    df=self.dataloader.data[Product.name()],
+                    df=self.dataloader.data[ProductTable.name()],
                     entity_identifier_column=get_entity_identifier_column(Product, 'name'))
                 if product:
                     product_info = ProductInfo(self.dataloader)

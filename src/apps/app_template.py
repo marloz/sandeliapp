@@ -1,9 +1,10 @@
+from config.formats import DATE_FORMAT
 from .utils import get_entity_from_selectbox, generate_id, get_entity_identifier_column
 from src.database.loader import Loader
 from src.database.tables import BaseTable
 from src.database.exporter import Exporter
 from src import entities
-from src.entities import Entity
+from src.entities import Entity, AccessLevel
 from src.config import COLUMN_NAME_SEPARATOR, ID_SUFFIX
 from src import processing
 
@@ -14,6 +15,7 @@ import pandas as pd
 from typing import Union, Type, Any
 from enum import EnumMeta, Enum
 from abc import abstractmethod
+from datetime import datetime
 
 VALUE_TYPE_WIDGET_MAP = {
     list: st.selectbox,
@@ -25,11 +27,12 @@ VALUE_TYPE_WIDGET_MAP = {
 class AppTemplate(HydraHeadApp):
 
     def __init__(self, entity_type: Type[Entity],
+                 output_table: BaseTable,
                  dataloader: Loader) -> None:
         self.entity_type = entity_type
         self.entity_type_name = entity_type.name()
         self.dataloader = dataloader
-        self.output_table = self.dataloader.table_info[self.entity_type_name]
+        self.output_table = output_table
         self.entity_processor: processing.ProcessingStrategy = self._get_entity_processor()
 
     def _get_entity_processor(self) -> processing.ProcessingStrategy:
@@ -45,7 +48,7 @@ class AppTemplate(HydraHeadApp):
         st.write(f'Edit existing {self.entity_type_name} details')
         return get_entity_from_selectbox(
             entity_type=self.entity_type,
-            df=self.dataloader.data[self.entity_type_name],
+            df=self.dataloader.data[self.output_table.name()],
             entity_identifier_column=entity_identifier_column)
 
     def fill_in_entity_details(self) -> Union[Entity, None]:
@@ -75,7 +78,24 @@ class AppTemplate(HydraHeadApp):
         }
         return self.entity_type(**entity_info_dict)
 
-    @ staticmethod
+    @staticmethod
     def save_entity_df(entity_df: pd.DataFrame, output_table: BaseTable) -> None:
         Exporter().append_df_to_database(entity_df, output_table)
         st.success(f'Exported to {output_table.table_name} table')
+
+    def download_data(self):
+        @st.cache
+        def convert_df_to_csv(df):
+            # IMPORTANT: Cache the conversion to prevent computation on every rerun
+            return df.to_csv(sep=';', index=False).encode('utf-8')
+
+        if st.session_state.current_user_access != AccessLevel.user.value:
+            data = self.dataloader.data[self.output_table.name()]
+            data = convert_df_to_csv(data)
+            output_name = COLUMN_NAME_SEPARATOR.join([self.output_table.name(),
+                                                      datetime.now().strftime(DATE_FORMAT)])
+            st.download_button(
+                label=f'Download {self.entity_type_name} data',
+                data=data,
+                file_name=output_name + '.csv',
+                mime='text/csv')

@@ -20,6 +20,10 @@ class BaseTable(ABC):
     def argument_dict(self) -> Dict[str, Any]:
         return {k: v for k, v in self.__dict__.items() if k not in NON_ARGUMENT_ATTRS}
 
+    @classmethod
+    def name(cls) -> str:
+        return cls.__name__.lower()
+
 
 @dataclass
 class CustomerTable(BaseTable):
@@ -58,15 +62,27 @@ class ProductTable(BaseTable):
 
 
 @dataclass
-class OrdersTable(BaseTable):
+class InventoryTable(BaseTable):
     table_name: str = 'orders'
     groupby_columns: List[str] = field(default_factory=list)
     column_to_sum: str = 'quantity'
     query: str = 'GroupedSumQuery'
-    processing: str = 'OrderProcessing'
+    processing: str = 'DefaultProcessing'
 
     def __post_init__(self):
         self.groupby_columns = ['product_name']
+
+
+@dataclass
+class OrdersTable(BaseTable):
+    table_name: str = 'orders'
+    groupby_columns: List[str] = field(default_factory=list)
+    sort_column: str = 'timestamp'
+    query: str = 'LatestRowQuery'
+    processing: str = 'OrderProcessing'
+
+    def __post_init__(self):
+        self.groupby_columns = ['order_id']
 
 
 @dataclass

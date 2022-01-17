@@ -25,12 +25,12 @@ class Loader:
 
     def load_data_dict(self, tables: List[BaseTable]) -> None:
         for table in tables:
-            self.table_info[table.table_name] = table
-            self.data[table.table_name] = self.load_table_from_info(table)
+            self.table_info[table.name()] = table
+            self.data[table.name()] = self.load_table_from_info(table)
 
     def update(self, table: BaseTable) -> None:
-        self.table_info[table.table_name] = table
-        self.data[table.table_name] = self.load_table_from_info(table)
+        self.table_info[table.name()] = table
+        self.data[table.name()] = self.load_table_from_info(table)
 
 
 @st.cache(allow_output_mutation=True)

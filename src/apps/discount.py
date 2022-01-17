@@ -1,7 +1,7 @@
 from .app_template import AppTemplate
 from .utils import generate_id
 from src.database.loader import Loader
-from src.database.tables import DiscountTable, ProductTable
+from src.database.tables import BaseTable, DiscountTable, ProductTable
 from src.entities import Entity, Discount, DiscountLevel
 
 import streamlit as st
@@ -13,11 +13,14 @@ from typing import Type
 class DiscountApp(AppTemplate):
 
     def __init__(self, entity_type: Type[Entity],
+                 output_table: BaseTable,
                  dataloader: Loader):
-        super().__init__(entity_type, dataloader)
-        self.dataloader = dataloader
+        super().__init__(entity_type, output_table, dataloader)
 
     def run(self):
+
+        self.download_data()
+
         with st.container():
             (discount_level_col, discount_identifier_col,
              start_date_col, end_date_col, discount_percent_col) = st.columns(5)
@@ -28,7 +31,7 @@ class DiscountApp(AppTemplate):
                     'Discount level', discount_levels)
 
             with discount_identifier_col:
-                product_df = self.dataloader.data[ProductTable.table_name]
+                product_df = self.dataloader.data[ProductTable.name()]
                 discount_identifiers = set(product_df[discount_level])
                 discount_identifier = st.selectbox(
                     'Discount identifier', discount_identifiers)
@@ -88,7 +91,7 @@ class DiscountApp(AppTemplate):
         return any(res)
 
     def check_active_discount(self, discount_level: str, discount_identifier: str) -> bool:
-        active_discount_df = self.dataloader.data[DiscountTable.table_name].loc[
+        active_discount_df = self.dataloader.data[DiscountTable.name()].loc[
             lambda x: (x['discount_level'] == discount_level)
             & (x['discount_identifier'] == discount_identifier)]
         if active_discount_df.shape[0] > 0:

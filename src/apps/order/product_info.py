@@ -1,6 +1,7 @@
 from ..utils import get_entity_identifier_column
 from src.database.loader import Loader
-from src.entities import Customer, Discount, Orders, Product
+from src.entities import Customer, Product
+from src.database.tables import DiscountTable, InventoryTable
 
 import streamlit as st
 
@@ -17,7 +18,7 @@ class ProductInfo:
         self.show_active_discount(product)
 
     def check_inventory(self, product: Product) -> None:
-        quantity_left = self.dataloader.data[Orders.name()] \
+        quantity_left = self.dataloader.data[InventoryTable.name()] \
             .set_index(get_entity_identifier_column(Product, 'name')) \
             .loc[product.product_name].values[0]
         st.write(f'Left in stock: {quantity_left}')
@@ -28,7 +29,7 @@ class ProductInfo:
         st.write(f'Price for customer before discount/VAT: {price}')
 
     def show_active_discount(self, product: Product) -> None:
-        discount_df = self.dataloader.data[Discount.name()]
+        discount_df = self.dataloader.data[DiscountTable.name()]
 
         def discount_condition(x):
             return (x['discount_identifier'] == product.product_name) \
