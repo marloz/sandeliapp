@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Dict
 from pydantic.dataclasses import dataclass
 from datetime import date
-from enum import Enum, EnumMeta, auto
+from enum import Enum
 
 
 @dataclass
@@ -90,7 +90,6 @@ class OrderType(Enum):
     consignment_sale = 'consignment sale'
     order_return = 'return'
     credit = 'credit'
-    discount = 'discount'
     refill = 'stock refill'
 
 
