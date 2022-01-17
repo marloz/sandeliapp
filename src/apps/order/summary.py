@@ -34,6 +34,7 @@ def show_order_summary(order_df: pd.DataFrame) -> bool:
         order_summary = st.empty()
         with order_summary.form('Summary'):
             st.header(f'Order summary: {order_df.order_id[0]}')
+            st.write('Payment due', order_df['payment_due'][0])
             order_df = order_df[ORDER_SUMMARY_COLUMNS]
             st.write(order_df.style.format(precision=2))
             st.write('Total sum without VAT:', order_df['sum'].sum())

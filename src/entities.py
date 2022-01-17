@@ -52,12 +52,20 @@ class PriceFactor(Enum):
     retail = 1.4
 
 
+class PaymetTerms(Enum):
+    days_30 = 30
+    days_60 = 60
+    days_90 = 90
+    days_120 = 120
+
+
 @dataclass
 class Customer(Entity):
     customer_id: str
     customer_name: str
     customer_type: CustomerType
     pricing_factor: PriceFactor
+    payment_terms: PaymetTerms
     address: str
     post_code: str
     customer_location: str
