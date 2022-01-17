@@ -18,7 +18,6 @@ class OrderApp(AppTemplate):
     def __init__(self, entity_type: Type[Entity],
                  dataloader: Loader) -> None:
         super().__init__(entity_type, dataloader)
-        self.dataloader = dataloader
 
     def run(self):
         product, customer = None, None
@@ -27,8 +26,8 @@ class OrderApp(AppTemplate):
         order_date, order_type, customer = self.date_order_type_and_customer_selection()
 
         if customer:
-            product, selected_quantity, entered_discount = \
-                self.product_quantity_and_discount_selection(customer)
+            product, selected_quantity, discount = \
+                self.product_selection(customer)
 
         if product and customer:
             order_row = Orders(manager=manager,
@@ -37,7 +36,7 @@ class OrderApp(AppTemplate):
                                order_type=order_type,
                                product=product,
                                quantity=selected_quantity,
-                               discount=entered_discount)
+                               discount=discount)
 
             if st.button('Add to order'):
                 st.session_state['order_rows'].append(order_row)
@@ -85,10 +84,11 @@ class OrderApp(AppTemplate):
 
         return order_date, order_type, customer
 
-    def product_quantity_and_discount_selection(self, customer: Customer
-                                                ) -> Tuple[Product, int, float]:
+    def product_selection(self, customer: Customer
+                          ) -> Tuple[Product, int, float]:
         with st.container():
-            product_col, quantity_col, discount_col = st.columns([4, 1, 1])
+            product_col, quantity_col = st.columns([4, 1])
+            active_discount = 0.
 
             with product_col:
                 product = get_entity_from_selectbox(
@@ -96,14 +96,12 @@ class OrderApp(AppTemplate):
                     df=self.dataloader.data[Product.name()],
                     entity_identifier_column=get_entity_identifier_column(Product, 'name'))
                 if product:
-                    ProductInfo(self.dataloader).show(product, customer)
+                    product_info = ProductInfo(self.dataloader)
+                    product_info.show(product, customer)
+                    active_discount = product_info.active_discount
 
             with quantity_col:
                 selected_quantity = st.number_input('Enter quantity',
                                                     min_value=1)
 
-            with discount_col:
-                entered_discount = st.number_input('Enter discount %', min_value=0.,
-                                                   max_value=100., step=10.)
-
-            return product, selected_quantity, entered_discount
+            return product, selected_quantity, active_discount

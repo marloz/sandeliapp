@@ -3,12 +3,14 @@ from src.database.loader import Loader
 from src.entities import Customer, Discount, Orders, Product
 
 import streamlit as st
+from typing import Optional
 
 
 class ProductInfo:
 
     def __init__(self, dataloader: Loader):
         self.dataloader = dataloader
+        self.active_discount: float = 0.
 
     def show(self, product: Product, customer: Customer):
         self.check_inventory(product)
@@ -41,5 +43,6 @@ class ProductInfo:
         if active_discounts.shape[0] > 0:
             st.write('Active discounts for selected product:')
             st.write(active_discounts)
+            self.active_discount = active_discounts['discount_percent'].values[0]
         else:
             st.write('No active discounts')
