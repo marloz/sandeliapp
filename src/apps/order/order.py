@@ -3,7 +3,8 @@ from .summary import show_order_summary
 from ..utils import get_entity_from_selectbox, get_entity_from_df, get_entity_identifier_column
 from ..app_template import AppTemplate
 from src.database.loader import Loader
-from src.entities import Customer, Manager, Product, Orders, Entity
+from src.entities import Customer, Manager, Product, Orders, Entity, OrderType
+from src.database.tables import BaseTable, CustomerTable, ManagerTable, OrdersTable, ProductTable
 
 import streamlit as st
 
@@ -13,32 +14,25 @@ from typing import Tuple, Type
 st.session_state['order_rows'] = []
 
 
-ORDER_TYPES = [
-    'sale',
-    'consignment',
-    'consignment sale',
-    'return',
-    'credit',
-    'discount',
-    'stock refill']
-
-
 class OrderApp(AppTemplate):
 
     def __init__(self, entity_type: Type[Entity],
+                 output_table: BaseTable,
                  dataloader: Loader) -> None:
-        super().__init__(entity_type, dataloader)
-        self.dataloader = dataloader
+        super().__init__(entity_type, output_table, dataloader)
 
     def run(self):
         product, customer = None, None
 
         manager = self.write_manager_info()
+
+        self.download_data()
+
         order_date, order_type, customer = self.date_order_type_and_customer_selection()
 
         if customer:
-            product, selected_quantity, entered_discount = \
-                self.product_quantity_and_discount_selection(customer)
+            product, selected_quantity, discount = \
+                self.product_selection(customer)
 
         if product and customer:
             order_row = Orders(manager=manager,
@@ -47,7 +41,7 @@ class OrderApp(AppTemplate):
                                order_type=order_type,
                                product=product,
                                quantity=selected_quantity,
-                               discount=entered_discount)
+                               discount=discount)
 
             if st.button('Add to order'):
                 st.session_state['order_rows'].append(order_row)
@@ -66,7 +60,7 @@ class OrderApp(AppTemplate):
     def write_manager_info(self: Loader) -> Manager:
         manager = get_entity_from_df(
             entity_type=Manager,
-            df=self.dataloader.data[Manager.name()],
+            df=self.dataloader.data[ManagerTable.name()],
             entity_identifier_column=get_entity_identifier_column(
                 Manager, 'id'),
             entity_identifier=st.session_state.current_user)
@@ -81,10 +75,11 @@ class OrderApp(AppTemplate):
                 order_date = st.date_input('Order date')
 
             with type_col:
-                order_type = st.selectbox('Order type', ORDER_TYPES)
+                order_type = st.selectbox(
+                    'Order type', [e.value for e in OrderType])
 
             with customer_col:
-                df = self.dataloader.data[Customer.name()]
+                df = self.dataloader.data[CustomerTable.name()]
                 entity_identifier_column = get_entity_identifier_column(Customer,
                                                                         'name')
                 customer = get_entity_from_selectbox(
@@ -94,25 +89,24 @@ class OrderApp(AppTemplate):
 
         return order_date, order_type, customer
 
-    def product_quantity_and_discount_selection(self, customer: Customer
-                                                ) -> Tuple[Product, int, float]:
+    def product_selection(self, customer: Customer
+                          ) -> Tuple[Product, int, float]:
         with st.container():
-            product_col, quantity_col, discount_col = st.columns([4, 1, 1])
+            product_col, quantity_col = st.columns([4, 1])
+            active_discount = 0.
 
             with product_col:
                 product = get_entity_from_selectbox(
                     entity_type=Product,
-                    df=self.dataloader.data[Product.name()],
+                    df=self.dataloader.data[ProductTable.name()],
                     entity_identifier_column=get_entity_identifier_column(Product, 'name'))
                 if product:
-                    ProductInfo(self.dataloader).show(product, customer)
+                    product_info = ProductInfo(self.dataloader)
+                    product_info.show(product, customer)
+                    active_discount = product_info.active_discount
 
             with quantity_col:
                 selected_quantity = st.number_input('Enter quantity',
                                                     min_value=1)
 
-            with discount_col:
-                entered_discount = st.number_input('Enter discount %', min_value=0.,
-                                                   max_value=100., step=10.)
-
-            return product, selected_quantity, entered_discount
+            return product, selected_quantity, active_discount

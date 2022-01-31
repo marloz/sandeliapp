@@ -56,6 +56,7 @@ class OrderProcessing(ProcessingStrategy):
         return pd.concat([self._preprocess(entity)
                           for entity in entity_list]) \
                  .pipe(self.add_order_amounts) \
+                 .pipe(self.calculate_payment_due) \
                  .reset_index(drop=True) \
                  .assign(order_id=generate_id())
 
@@ -67,9 +68,15 @@ class OrderProcessing(ProcessingStrategy):
             price=lambda x: x['cost'].mul(x['pricing_factor']),
             discount_amount=lambda x: x['price'].mul(x['discount']).div(100),
             price_with_vat=lambda x: x['price'] * VAT,
-            price_with_discount=lambda x: x['price'].sub(
-                x['discount_amount']),
+            price_with_discount=lambda x: x['price']
+            .sub(x['discount_amount']),
             price_with_discount_vat=lambda x: x['price_with_discount'] * VAT,
             sum=lambda x: x['price_with_discount'] * x['quantity'],
             sum_vat=lambda x: x['price_with_discount_vat'] * x['quantity']
         )
+
+    @staticmethod
+    def calculate_payment_due(order_df: pd.DataFrame) -> pd.DataFrame:
+        return order_df.assign(
+            payment_due=lambda x: pd.to_datetime(x['order_date'])
+            + pd.to_timedelta(x['payment_terms'], unit='D'))

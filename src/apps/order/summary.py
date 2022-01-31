@@ -33,8 +33,11 @@ def show_order_summary(order_df: pd.DataFrame) -> bool:
     with summary_col:
         order_summary = st.empty()
         with order_summary.form('Summary'):
-            st.header('Order summary')
-            st.write(order_df[ORDER_SUMMARY_COLUMNS]
-                     .style.format(precision=2))
+            st.header(f'Order summary: {order_df.order_id[0]}')
+            st.write('Payment due', order_df['payment_due'][0])
+            order_df = order_df[ORDER_SUMMARY_COLUMNS]
+            st.write(order_df.style.format(precision=2))
+            st.write('Total sum without VAT:', order_df['sum'].sum())
+            st.write('Total sum with VAT:', order_df['sum_vat'].sum())
             submitted = st.form_submit_button('Save order')
             return submitted

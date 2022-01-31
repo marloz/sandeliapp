@@ -1,9 +1,7 @@
 from config.formats import DATE_FORMAT
-from .loader import SqlExecutor
 
 from abc import ABC
 from pydantic.dataclasses import dataclass
-import pandas as pd
 from dataclasses import field
 from typing import List, Dict, Any
 from datetime import datetime, date
@@ -22,10 +20,9 @@ class BaseTable(ABC):
     def argument_dict(self) -> Dict[str, Any]:
         return {k: v for k, v in self.__dict__.items() if k not in NON_ARGUMENT_ATTRS}
 
-    def get_table_columns(self) -> List[str]:
-        with SqlExecutor() as executor:
-            sql = f"""SELECT * FROM {self.table_name} LIMIT 1"""
-            return pd.read_sql(sql, con=executor.connection).columns.tolist()
+    @classmethod
+    def name(cls) -> str:
+        return cls.__name__.lower()
 
 
 @dataclass
@@ -65,15 +62,27 @@ class ProductTable(BaseTable):
 
 
 @dataclass
-class OrdersTable(BaseTable):
+class InventoryTable(BaseTable):
     table_name: str = 'orders'
     groupby_columns: List[str] = field(default_factory=list)
     column_to_sum: str = 'quantity'
     query: str = 'GroupedSumQuery'
-    processing: str = 'OrderProcessing'
+    processing: str = 'DefaultProcessing'
 
     def __post_init__(self):
         self.groupby_columns = ['product_name']
+
+
+@dataclass
+class OrdersTable(BaseTable):
+    table_name: str = 'orders'
+    groupby_columns: List[str] = field(default_factory=list)
+    sort_column: str = 'timestamp'
+    query: str = 'LatestRowQuery'
+    processing: str = 'OrderProcessing'
+
+    def __post_init__(self):
+        self.groupby_columns = ['order_id']
 
 
 @dataclass
