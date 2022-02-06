@@ -1,13 +1,13 @@
 from abc import ABC
-from typing import Dict
-from pydantic.dataclasses import dataclass
 from datetime import date
 from enum import Enum
+from typing import Dict
+
+from pydantic.dataclasses import dataclass
 
 
 @dataclass
 class Entity(ABC):
-
     @classmethod
     def attribute_list(cls) -> list[str]:
         return list(cls.__annotations__.keys())
@@ -22,14 +22,14 @@ class Entity(ABC):
 
 
 class AccessLevel(Enum):
-    admin = 'admin'
-    manager = 'manager'
-    user = 'user'
+    admin = "admin"
+    manager = "manager"
+    user = "user"
 
 
 class ManagerLocation(Enum):
-    vilnius = 'Vilnius'
-    riga = 'Riga'
+    vilnius = "Vilnius"
+    riga = "Riga"
 
 
 @dataclass
@@ -41,13 +41,13 @@ class Manager(Entity):
 
 
 class CustomerType(Enum):
-    default = 'default'
-    wholesale = 'whole sale'
-    retail = 'retail'
+    default = "default"
+    wholesale = "whole sale"
+    retail = "retail"
 
 
 class PriceFactor(Enum):
-    default = 1.
+    default = 1.0
     wholesale = 1.2
     retail = 1.4
 
@@ -85,12 +85,12 @@ class Product(Entity):
 
 
 class OrderType(Enum):
-    sale = 'sale'
-    consignment = 'consignment'
-    consignment_sale = 'consignment sale'
-    order_return = 'return'
-    credit = 'credit'
-    refill = 'stock refill'
+    sale = "sale"
+    consignment = "consignment"
+    consignment_sale = "consignment sale"
+    order_return = "return"
+    credit = "credit"
+    refill = "stock refill"
 
 
 @dataclass
@@ -105,9 +105,9 @@ class Orders(Entity):
 
 
 class DiscountLevel(Enum):
-    product_name = 'product_name'
-    product_category = 'product_category'
-    manufacturer = 'manufacturer'
+    product_name = "product_name"
+    product_category = "product_category"
+    manufacturer = "manufacturer"
 
 
 @dataclass
