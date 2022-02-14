@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Any, Dict, Type, Union
 from uuid import uuid1
 
 import pandas as pd
@@ -20,9 +20,7 @@ def get_entity_from_df(
     entity_identifier: str,
 ) -> Entity:
     required_columns = entity_type.attribute_list()
-    entity_df = df.loc[
-        lambda x: x[entity_identifier_column] == entity_identifier, required_columns
-    ]
+    entity_df = df.loc[lambda x: x[entity_identifier_column] == entity_identifier, required_columns]
     entity_dict = entity_df.to_dict("records")[0]
     return entity_type(**entity_dict)
 
@@ -34,9 +32,7 @@ def get_entity_from_selectbox(
     default_value: str = "",
 ) -> Union[Entity, None]:
     values = df[entity_identifier_column]
-    entity_identifier = get_value_from_selectbox(
-        values=values, default_value=default_value
-    )
+    entity_identifier = get_value_from_selectbox(values=values, default_value=default_value)
     if entity_identifier != default_value:
         return get_entity_from_df(
             entity_type=entity_type,
@@ -52,7 +48,15 @@ def generate_id(len: int = 10) -> str:
     return str(uuid1())[:len]
 
 
-def get_entity_identifier_column(
-    entity_type: Type[Entity], identifier_type: str
-) -> str:
+def get_entity_identifier_column(entity_type: Type[Entity], identifier_type: str) -> str:
     return COLUMN_NAME_SEPARATOR.join([entity_type.name(), identifier_type])
+
+
+def calculate_order_summary(order_df: pd.DataFrame) -> Dict[str, str]:
+    return {
+        "Order id": order_df.iloc[0].order_id,
+        "Payment due": order_df.iloc[0].payment_due,
+        "Total sum EUR": str(round(order_df["sum"].sum(), 2)),
+        "VAT EUR": str(round(order_df["sum_vat"].sum() - order_df["sum"].sum(), 2)),
+        "Total sum with VAT EUR": str(round(order_df["sum_vat"].sum(), 2)),
+    }
