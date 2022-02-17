@@ -48,8 +48,8 @@ def download_invoice(order_df: pd.DataFrame, buyer: Customer):
     invoice_info = InvoiceInfo(
         # TODO: probably need select box, because order type != invoice type
         invoice_type=InvoiceType.VAT,
-        invoice_number=order_df.loc[0, "order_id"],
-        invoice_date=order_df.loc[0, "order_date"],
+        invoice_number=order_df.iloc[0].order_id,
+        invoice_date=order_df.iloc[0].order_date,
         buyer=buyer,
         seller=seller,
         order_df=order_df,
