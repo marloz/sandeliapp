@@ -16,7 +16,12 @@ from src.entities import AccessLevel, Entity
 
 from .utils import generate_id, get_entity_from_selectbox, get_entity_identifier_column
 
-VALUE_TYPE_WIDGET_MAP = {list: st.selectbox, str: st.text_input, float: st.number_input}
+VALUE_TYPE_WIDGET_MAP = {
+    list: st.selectbox,
+    str: st.text_input,
+    float: st.number_input,
+    int: st.number_input,
+}
 
 
 class AppTemplate(HydraHeadApp):
@@ -28,6 +33,7 @@ class AppTemplate(HydraHeadApp):
         self.dataloader = dataloader
         self.output_table = output_table
         self.entity_processor: processing.ProcessingStrategy = self._get_entity_processor()
+        self.entity_to_edit: Entity
 
     def _get_entity_processor(self) -> processing.ProcessingStrategy:
         return getattr(processing, self.output_table.processing)
@@ -37,9 +43,7 @@ class AppTemplate(HydraHeadApp):
         ...
 
     def select_entity_to_edit(self) -> Union[Entity, None]:
-        entity_identifier_column = get_entity_identifier_column(
-            self.entity_type, "name"
-        )
+        entity_identifier_column = get_entity_identifier_column(self.entity_type, "name")
         st.write(f"Edit existing {self.entity_type_name} details")
         return get_entity_from_selectbox(
             entity_type=self.entity_type,
@@ -53,20 +57,19 @@ class AppTemplate(HydraHeadApp):
         def _generate_caption(attribute_name: str) -> str:
             return attribute_name.replace(COLUMN_NAME_SEPARATOR, " ").capitalize()
 
-        def _get_value(
-            attribute_name: str, attribute_type: Union[type, EnumMeta]
-        ) -> Any:
+        def _get_value(attribute_name: str, attribute_type: Union[type, EnumMeta]) -> Any:
             if self.entity_to_edit:
                 value = self.entity_to_edit.__dict__[attribute_name]
-                return value.value if isinstance(value, Enum) else value
+                value = value.value if isinstance(value, Enum) else value
             elif ID_SUFFIX in attribute_name:
-                return generate_id()
+                value = generate_id()
             else:
-                return (
+                value = (
                     [i.value for i in getattr(entities, attribute_type.__name__)]
                     if isinstance(attribute_type, EnumMeta)
                     else attribute_type()
                 )
+            return value
 
         def _get_input_widget(attribute_name: str, attribute_type: type):
             caption = _generate_caption(attribute_name)
