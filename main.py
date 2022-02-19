@@ -44,24 +44,20 @@ def main():
     )
     st.session_state.current_user_access = manager.access.value
 
+    if "order_rows" not in st.session_state:
+        st.session_state.order_rows = []
     order_app = OrderApp(
-        entity_type=Orders,
-        output_table=OrdersTable(),
-        dataloader=st.session_state.dataloader,
+        entity_type=Orders, output_table=OrdersTable(), dataloader=st.session_state.dataloader,
     )
     app.add_app("Order", app=order_app)
 
     customer_app = EntityApp(
-        entity_type=Customer,
-        output_table=CustomerTable(),
-        dataloader=st.session_state.dataloader,
+        entity_type=Customer, output_table=CustomerTable(), dataloader=st.session_state.dataloader,
     )
     app.add_app("Customer", app=customer_app)
 
     product_app = EntityApp(
-        entity_type=Product,
-        output_table=ProductTable(),
-        dataloader=st.session_state.dataloader,
+        entity_type=Product, output_table=ProductTable(), dataloader=st.session_state.dataloader,
     )
     app.add_app("Product", app=product_app)
 
