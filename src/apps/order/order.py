@@ -37,12 +37,12 @@ class OrderApp(AppTemplate):
             )
 
             if st.button("Add to order"):
-                self.session_state.order_rows.append(order_row)
+                st.session_state.order_rows.append(order_row)
 
-            if len(self.session_state.order_rows) > 0:
-                order_df = self.entity_processor().process(self.session_state.order_rows)
+            if len(st.session_state.order_rows) > 0:
+                order_df = self.entity_processor().process(st.session_state.order_rows)
                 order_summary = OrderSummary(
-                    order_rows=self.session_state.order_rows,
+                    order_rows=st.session_state.order_rows,
                     buyer=customer,
                     processor=self.entity_processor(),
                 )
@@ -52,7 +52,7 @@ class OrderApp(AppTemplate):
                     order_df = order_summary.df
                     self.save_entity_df(order_df, output_table=self.output_table)
                     self.dataloader.update(self.output_table)
-                    self.session_state.order_rows = []
+                    st.session_state.order_rows = []
 
     def write_manager_info(self: Loader) -> Manager:
         manager = get_entity_from_df(
