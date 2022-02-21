@@ -1,4 +1,4 @@
-from typing import Any, Dict, Type, Union
+from typing import Dict, Type, Union
 from uuid import uuid1
 
 import pandas as pd

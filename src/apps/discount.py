@@ -64,7 +64,7 @@ class DiscountApp(AppTemplate):
             if discount_percent > 0 and is_active is False:
                 if st.button(f"Save {self.output_table.table_name}"):
                     self.save_entity_df(discount_df, output_table=self.output_table)
-                    self.dataloader.update(self.output_table)
+                    self.dataloader.load_single_table(self.output_table)
 
     def check_active_discounts_on_all_levels(
         self, product_df: pd.DataFrame, discount_level: str, discount_identifier: str

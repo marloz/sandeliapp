@@ -1,96 +1,61 @@
-from config.formats import DATE_FORMAT
-
 from abc import ABC
-from pydantic.dataclasses import dataclass
-from dataclasses import field
-from typing import List, Dict, Any
-from datetime import datetime, date
+from dataclasses import dataclass
+
+from src.database.queries import GroupedSumQuery, LatestRowQuery, LoaderQuery, ValidDateQuery
+from src.processing import DefaultProcessing, OrderProcessing, ProcessingStrategy
 
 
-NON_ARGUMENT_ATTRS = ['__initialised__', 'query', 'processing']
+NON_ARGUMENT_ATTRS = ["__initialised__", "query", "processing"]
 
 
 @dataclass
 class BaseTable(ABC):
 
-    table_name: str
-    query: str
-    processing: str
-
-    def argument_dict(self) -> Dict[str, Any]:
-        return {k: v for k, v in self.__dict__.items() if k not in NON_ARGUMENT_ATTRS}
-
-    @classmethod
-    def name(cls) -> str:
-        return cls.__name__.lower()
+    query: LoaderQuery
+    processing: ProcessingStrategy
 
 
 @dataclass
 class CustomerTable(BaseTable):
-    table_name: str = 'customer'
-    groupby_columns: List[str] = field(default_factory=list)
-    sort_column: str = 'timestamp'
-    query: str = 'LatestRowQuery'
-    processing: str = 'DefaultProcessing'
-
-    def __post_init__(self):
-        self.groupby_columns = ['customer_id']
+    query: LoaderQuery = LatestRowQuery(table_name="customer", id_column="customer_id")
+    processing: ProcessingStrategy = DefaultProcessing()
 
 
 @dataclass
 class ManagerTable(BaseTable):
-    table_name: str = 'manager'
-    groupby_columns: List[str] = field(default_factory=list)
-    sort_column: str = 'timestamp'
-    query: str = 'LatestRowQuery'
-    processing: str = 'DefaultProcessing'
-
-    def __post_init__(self):
-        self.groupby_columns = ['manager_id']
+    query: LoaderQuery = LatestRowQuery(table_name="manager", id_column="manager_id")
+    processing: ProcessingStrategy = DefaultProcessing()
 
 
 @dataclass
 class ProductTable(BaseTable):
-    table_name: str = 'product'
-    groupby_columns: List[str] = field(default_factory=list)
-    sort_column: str = 'timestamp'
-    query: str = 'LatestRowQuery'
-    processing: str = 'DefaultProcessing'
-
-    def __post_init__(self):
-        self.groupby_columns = ['product_id']
+    query: LoaderQuery = LatestRowQuery(table_name="product", id_column="product_id")
+    processing: ProcessingStrategy = DefaultProcessing()
 
 
 @dataclass
 class InventoryTable(BaseTable):
-    table_name: str = 'orders'
-    groupby_columns: List[str] = field(default_factory=list)
-    column_to_sum: str = 'quantity'
-    query: str = 'GroupedSumQuery'
-    processing: str = 'DefaultProcessing'
-
-    def __post_init__(self):
-        self.groupby_columns = ['product_name']
+    query: LoaderQuery = GroupedSumQuery(
+        table_name="orders",
+        id_column="order_id",
+        groupby_columns=["product_name"],
+        column_to_sum="quantity",
+    )
+    processing: ProcessingStrategy = DefaultProcessing()
 
 
 @dataclass
 class OrdersTable(BaseTable):
-    table_name: str = 'orders'
-    groupby_columns: List[str] = field(default_factory=list)
-    sort_column: str = 'timestamp'
-    query: str = 'LatestRowQuery'
-    processing: str = 'OrderProcessing'
-
-    def __post_init__(self):
-        self.groupby_columns = ['order_id']
+    query: LoaderQuery = LatestRowQuery(table_name="orders", id_column="order_id")
+    processing: ProcessingStrategy = OrderProcessing()
 
 
 @dataclass
 class DiscountTable(BaseTable):
-    table_name: str = 'discount'
-    filter_date: date = datetime.now().date()
-    start_date_column: str = 'start_date'
-    end_date_column: str = 'end_date'
-    date_format: str = DATE_FORMAT
-    query: str = 'ValidDateQuery'
-    processing: str = 'DefaultProcessing'
+    query: LoaderQuery = ValidDateQuery(
+        table_name="discount",
+        id_column="discount_id",
+        start_date_column="start_date",
+        end_date_column="end_date",
+    )
+    processing: ProcessingStrategy = DefaultProcessing()

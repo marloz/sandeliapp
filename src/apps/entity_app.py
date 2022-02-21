@@ -9,10 +9,7 @@ from typing import Optional, Type
 
 
 class EntityApp(AppTemplate):
-
-    def __init__(self, entity_type: Type[Entity],
-                 output_table: BaseTable,
-                 dataloader: Loader):
+    def __init__(self, entity_type: Type[Entity], output_table: BaseTable, dataloader: Loader):
         super().__init__(entity_type, output_table, dataloader)
         self.entity_to_edit: Optional[Entity] = None
 
@@ -31,6 +28,6 @@ class EntityApp(AppTemplate):
 
         entity_df = self.entity_processor().process([entity])
 
-        if st.button(f'Save {self.output_table.table_name}'):
+        if st.button(f"Save {self.output_table.table_name}"):
             self.save_entity_df(entity_df, output_table=self.output_table)
-            self.dataloader.update(self.output_table)
+            self.dataloader.load_single_table(self.output_table)

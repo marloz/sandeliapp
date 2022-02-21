@@ -47,7 +47,7 @@ class OrderApp(AppTemplate):
 
                 if submitted:
                     self.save_entity_df(order_df, output_table=self.output_table)
-                    self.dataloader.update(self.output_table)
+                    self.dataloader.load_single_table(self.output_table)
                     st.session_state["order_rows"] = []
 
     def write_manager_info(self: Loader) -> Manager:
