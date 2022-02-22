@@ -1,13 +1,14 @@
 import hydralit as hy
 import streamlit as st
 
-from src.apps import DiscountApp, EntityApp, OrderApp
+from src.apps.order.order import OrderApp
+from src.apps.discount import DiscountApp
+from src.apps.entity_app import EntityApp
 from src.apps.utils import get_entity_from_df, get_entity_identifier_column
 from src.database.loader import preload_data
 from src.database.tables import (
     CustomerTable,
     DiscountTable,
-    InventoryTable,
     ManagerTable,
     OrdersTable,
     ProductTable,
@@ -27,7 +28,6 @@ def main():
         CustomerTable(),
         ProductTable(),
         DiscountTable(),
-        InventoryTable(),
         OrdersTable(),
     ]
     st.session_state.dataloader = preload_data(tables)
@@ -38,30 +38,24 @@ def main():
     st.session_state.current_user = MANAGER_ID
     manager = get_entity_from_df(
         entity_type=Manager,
-        df=st.session_state.dataloader.data[ManagerTable.name()],
+        df=st.session_state.dataloader.data[ManagerTable.query.table_name],
         entity_identifier_column=get_entity_identifier_column(Manager, "id"),
         entity_identifier=st.session_state.current_user,
     )
     st.session_state.current_user_access = manager.access.value
 
     order_app = OrderApp(
-        entity_type=Orders,
-        output_table=OrdersTable(),
-        dataloader=st.session_state.dataloader,
+        entity_type=Orders, output_table=OrdersTable(), dataloader=st.session_state.dataloader,
     )
     app.add_app("Order", app=order_app)
 
     customer_app = EntityApp(
-        entity_type=Customer,
-        output_table=CustomerTable(),
-        dataloader=st.session_state.dataloader,
+        entity_type=Customer, output_table=CustomerTable(), dataloader=st.session_state.dataloader,
     )
     app.add_app("Customer", app=customer_app)
 
     product_app = EntityApp(
-        entity_type=Product,
-        output_table=ProductTable(),
-        dataloader=st.session_state.dataloader,
+        entity_type=Product, output_table=ProductTable(), dataloader=st.session_state.dataloader,
     )
     app.add_app("Product", app=product_app)
 

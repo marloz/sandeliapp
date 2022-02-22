@@ -42,7 +42,7 @@ class OrderApp(AppTemplate):
                 st.session_state["order_rows"].append(order_row)
 
             if len(st.session_state["order_rows"]) > 0:
-                order_df = self.entity_processor().process(st.session_state["order_rows"])
+                order_df = self.output_table.processing.process(st.session_state["order_rows"])
                 submitted = show_order_summary(order_df, customer)
 
                 if submitted:
@@ -53,7 +53,7 @@ class OrderApp(AppTemplate):
     def write_manager_info(self: Loader) -> Manager:
         manager = get_entity_from_df(
             entity_type=Manager,
-            df=self.dataloader.data[ManagerTable.name()],
+            df=self.dataloader.data[ManagerTable.query.table_name],
             entity_identifier_column=get_entity_identifier_column(Manager, "id"),
             entity_identifier=st.session_state.current_user,
         )
@@ -71,7 +71,7 @@ class OrderApp(AppTemplate):
                 order_type = st.selectbox("Order type", [e.value for e in OrderType])
 
             with customer_col:
-                df = self.dataloader.data[CustomerTable.name()]
+                df = self.dataloader.data[CustomerTable().query.table_name]
                 entity_identifier_column = get_entity_identifier_column(Customer, "name")
                 customer = get_entity_from_selectbox(
                     entity_type=Customer, df=df, entity_identifier_column=entity_identifier_column
@@ -87,7 +87,7 @@ class OrderApp(AppTemplate):
             with product_col:
                 product = get_entity_from_selectbox(
                     entity_type=Product,
-                    df=self.dataloader.data[ProductTable.name()],
+                    df=self.dataloader.data[ProductTable().query.table_name],
                     entity_identifier_column=get_entity_identifier_column(Product, "name"),
                 )
                 if product:

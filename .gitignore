@@ -2,3 +2,5 @@
 .vscode/
 __pycahce__/
 *.ipynb
+*.pyc
+invoice.pdf

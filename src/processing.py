@@ -2,7 +2,9 @@ import json
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime
+from sqlite3 import Row
 from typing import Any, Dict, List
+from enum import Enum
 
 import pandas as pd
 from pydantic.json import pydantic_encoder
@@ -15,7 +17,26 @@ NEGATIVE_QUANTITY_TYPES = ["stock refill", "return"]
 VAT = 1.21
 
 
+class RowStatus(Enum):
+    INSERT = "I"
+    UPDATE = "U"
+    DELETE = "D"
+
+
 class ProcessingStrategy(ABC):
+    @abstractmethod
+    def process(self, entity_list: List[Entity], row_status: RowStatus = RowStatus) -> pd.DataFrame:
+        ...
+
+    @classmethod
+    def _preprocess(cls, entity: Entity, row_status: RowStatus) -> pd.DataFrame:
+        entity_dict = cls._serialize_entity(entity)
+        return (
+            cls._entity_dict_to_df(entity_dict)
+            .pipe(cls._add_timestamp)
+            .pipe(cls._add_row_status, row_status=row_status)
+        )
+
     @staticmethod
     def _serialize_entity(entity: Entity) -> Dict[str, Any]:
         return json.loads(json.dumps(entity, indent=2, default=pydantic_encoder))
@@ -36,25 +57,20 @@ class ProcessingStrategy(ABC):
     def _add_timestamp(df: pd.DataFrame) -> pd.DataFrame:
         return df.assign(timestamp=datetime.now().strftime(TIMESTAMP_FORMAT))
 
-    @classmethod
-    def _preprocess(cls, entity: Entity) -> pd.DataFrame:
-        entity_dict = cls._serialize_entity(entity)
-        return cls._entity_dict_to_df(entity_dict).pipe(cls._add_timestamp)
-
-    @abstractmethod
-    def process(self, entity_list: List[Entity]) -> pd.DataFrame:
-        ...
+    @staticmethod
+    def _add_row_status(df: pd.DataFrame, row_status: RowStatus) -> pd.DataFrame:
+        return df.assign(status=row_status.value)
 
 
 class DefaultProcessing(ProcessingStrategy):
-    def process(self, entity_list: List[Entity]) -> pd.DataFrame:
-        return self._preprocess(entity_list[0])
+    def process(self, entity_list: List[Entity], row_status: RowStatus) -> pd.DataFrame:
+        return self._preprocess(entity_list[0], row_status)
 
 
 class OrderProcessing(ProcessingStrategy):
-    def process(self, entity_list: List[Entity]) -> pd.DataFrame:
+    def process(self, entity_list: List[Entity], row_status: RowStatus) -> pd.DataFrame:
         return (
-            pd.concat([self._preprocess(entity) for entity in entity_list])
+            pd.concat([self._preprocess(entity, row_status) for entity in entity_list])
             .pipe(self.add_order_amounts)
             .pipe(self.calculate_payment_due)
             .reset_index(drop=True)

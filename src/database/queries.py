@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pydantic.dataclasses import dataclass
-from dataclasses import InitVar, field
+from dataclasses import field
 from typing import List
 
 from src.config import DATE_FORMAT

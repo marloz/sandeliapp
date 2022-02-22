@@ -1,18 +1,12 @@
-from src.database.tables import BaseTable
+from sqlite3 import Row
 from .app_template import AppTemplate
-from src.database.loader import Loader
-from src.entities import Entity, AccessLevel
+from src.entities import AccessLevel
+from src.processing import RowStatus
 
 import streamlit as st
 
-from typing import Optional, Type
-
 
 class EntityApp(AppTemplate):
-    def __init__(self, entity_type: Type[Entity], output_table: BaseTable, dataloader: Loader):
-        super().__init__(entity_type, output_table, dataloader)
-        self.entity_to_edit: Optional[Entity] = None
-
     def run(self):
 
         self.download_data()
@@ -26,8 +20,12 @@ class EntityApp(AppTemplate):
         with new_entity_col:
             entity = self.fill_in_entity_details()
 
-        entity_df = self.entity_processor().process([entity])
+        row_status = RowStatus.UPDATE if self.entity_to_edit else RowStatus.INSERT
+        st.write(f"These records will be exported using write mode: {row_status.name}")
+        entity_df = self.output_table.processing.process(
+            entity_list=[entity], row_status=row_status
+        )
 
-        if st.button(f"Save {self.output_table.table_name}"):
+        if st.button(f"Save {self.output_table.query.table_name}"):
             self.save_entity_df(entity_df, output_table=self.output_table)
             self.dataloader.load_single_table(self.output_table)

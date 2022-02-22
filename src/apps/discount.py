@@ -1,19 +1,13 @@
-from typing import Type
-
 import pandas as pd
 import streamlit as st
-from src.database.loader import Loader
-from src.database.tables import BaseTable, DiscountTable, ProductTable
-from src.entities import Discount, DiscountLevel, Entity
+from src.database.tables import DiscountTable, ProductTable
+from src.entities import Discount, DiscountLevel
 
 from .app_template import AppTemplate
 from .utils import generate_id
 
 
 class DiscountApp(AppTemplate):
-    def __init__(self, entity_type: Type[Entity], output_table: BaseTable, dataloader: Loader):
-        super().__init__(entity_type, output_table, dataloader)
-
     def run(self):
 
         self.download_data()
@@ -32,7 +26,7 @@ class DiscountApp(AppTemplate):
                 discount_level = st.selectbox("Discount level", discount_levels)
 
             with discount_identifier_col:
-                product_df = self.dataloader.data[ProductTable.name()]
+                product_df = self.dataloader.data[ProductTable().query.table_name]
                 discount_identifiers = set(product_df[discount_level])
                 discount_identifier = st.selectbox("Discount identifier", discount_identifiers)
             is_active = self.check_active_discounts_on_all_levels(
@@ -59,10 +53,10 @@ class DiscountApp(AppTemplate):
                 discount_percent=discount_percent,
             )
 
-            discount_df = self.entity_processor().process([discount])
+            discount_df = self.output_table.processing.process([discount])
 
             if discount_percent > 0 and is_active is False:
-                if st.button(f"Save {self.output_table.table_name}"):
+                if st.button(f"Save {self.output_table.query.table_name}"):
                     self.save_entity_df(discount_df, output_table=self.output_table)
                     self.dataloader.load_single_table(self.output_table)
 
@@ -70,12 +64,10 @@ class DiscountApp(AppTemplate):
         self, product_df: pd.DataFrame, discount_level: str, discount_identifier: str
     ) -> bool:
         res = []
-
-        res.append(
-            self.check_active_discount(
-                discount_level=discount_level, discount_identifier=discount_identifier
-            )
+        active_discount = self.check_active_discount(
+            discount_level=discount_level, discount_identifier=discount_identifier
         )
+        res.append(active_discount)
 
         def discount_level_condition(x):
             return x[discount_level] == discount_identifier
@@ -89,19 +81,17 @@ class DiscountApp(AppTemplate):
         ]:
             if discount_level == current_level:
                 for product_attribute in levels_to_check:
-                    identifier = product_df.loc[discount_level_condition, product_attribute].values[
-                        0
-                    ]
-                    res.append(
-                        self.check_active_discount(
-                            discount_level=product_attribute, discount_identifier=identifier
-                        )
+                    identifier = product_df.loc[discount_level_condition, product_attribute]
+                    identifier = identifier.values[0]
+                    active_discount = self.check_active_discount(
+                        discount_level=discount_level, discount_identifier=discount_identifier
                     )
+                    res.append(active_discount)
 
         return any(res)
 
     def check_active_discount(self, discount_level: str, discount_identifier: str) -> bool:
-        active_discount_df = self.dataloader.data[DiscountTable.name()].loc[
+        active_discount_df = self.dataloader.data[DiscountTable().query.table_name].loc[
             lambda x: (x["discount_level"] == discount_level)
             & (x["discount_identifier"] == discount_identifier)
         ]
