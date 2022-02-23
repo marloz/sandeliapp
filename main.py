@@ -4,7 +4,7 @@ import streamlit as st
 from src.apps.order.order import OrderApp
 from src.apps.discount import DiscountApp
 from src.apps.entity_app import EntityApp
-from src.apps.utils import get_entity_from_df, get_entity_identifier_column
+from src.apps.utils import get_entity_from_df, get_entity_identifier_column, EntityIdentifierType
 from src.database.loader import preload_data
 from src.database.tables import (
     CustomerTable,
@@ -39,7 +39,7 @@ def main():
     manager = get_entity_from_df(
         entity_type=Manager,
         df=st.session_state.dataloader.data[ManagerTable.query.table_name],
-        entity_identifier_column=get_entity_identifier_column(Manager, "id"),
+        entity_identifier_column=get_entity_identifier_column(Manager, EntityIdentifierType.ID),
         entity_identifier=st.session_state.current_user,
     )
     st.session_state.current_user_access = manager.access.value
@@ -50,12 +50,18 @@ def main():
     app.add_app("Order", app=order_app)
 
     customer_app = EntityApp(
-        entity_type=Customer, output_table=CustomerTable(), dataloader=st.session_state.dataloader,
+        entity_type=Customer,
+        output_table=CustomerTable(),
+        dataloader=st.session_state.dataloader,
+        identifier_type=EntityIdentifierType.NAME,
     )
     app.add_app("Customer", app=customer_app)
 
     product_app = EntityApp(
-        entity_type=Product, output_table=ProductTable(), dataloader=st.session_state.dataloader,
+        entity_type=Product,
+        output_table=ProductTable(),
+        dataloader=st.session_state.dataloader,
+        identifier_type=EntityIdentifierType.NAME,
     )
     app.add_app("Product", app=product_app)
 
@@ -64,6 +70,7 @@ def main():
             entity_type=Discount,
             output_table=DiscountTable(),
             dataloader=st.session_state.dataloader,
+            identifier_type=EntityIdentifierType.ID,
         )
         app.add_app("Discounts", app=discount_app)
 

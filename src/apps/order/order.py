@@ -7,7 +7,12 @@ from src.database.tables import CustomerTable, ManagerTable, ProductTable
 from src.entities import Customer, Manager, Orders, OrderType, Product
 
 from ..app_template import AppTemplate
-from ..utils import get_entity_from_df, get_entity_from_selectbox, get_entity_identifier_column
+from ..utils import (
+    get_entity_from_df,
+    get_entity_from_selectbox,
+    get_entity_identifier_column,
+    EntityIdentifierType,
+)
 from .product_info import ProductInfo
 from .summary import show_order_summary
 
@@ -46,15 +51,14 @@ class OrderApp(AppTemplate):
                 submitted = show_order_summary(order_df, customer)
 
                 if submitted:
-                    self.save_entity_df(order_df, output_table=self.output_table)
-                    self.dataloader.load_single_table(self.output_table)
+                    self.save_entity_df(order_df)
                     st.session_state["order_rows"] = []
 
     def write_manager_info(self: Loader) -> Manager:
         manager = get_entity_from_df(
             entity_type=Manager,
             df=self.dataloader.data[ManagerTable.query.table_name],
-            entity_identifier_column=get_entity_identifier_column(Manager, "id"),
+            entity_identifier_column=get_entity_identifier_column(Manager, EntityIdentifierType.ID),
             entity_identifier=st.session_state.current_user,
         )
         st.write(manager)
@@ -72,7 +76,9 @@ class OrderApp(AppTemplate):
 
             with customer_col:
                 df = self.dataloader.data[CustomerTable().query.table_name]
-                entity_identifier_column = get_entity_identifier_column(Customer, "name")
+                entity_identifier_column = get_entity_identifier_column(
+                    Customer, EntityIdentifierType.NAME
+                )
                 customer = get_entity_from_selectbox(
                     entity_type=Customer, df=df, entity_identifier_column=entity_identifier_column
                 )
@@ -88,7 +94,9 @@ class OrderApp(AppTemplate):
                 product = get_entity_from_selectbox(
                     entity_type=Product,
                     df=self.dataloader.data[ProductTable().query.table_name],
-                    entity_identifier_column=get_entity_identifier_column(Product, "name"),
+                    entity_identifier_column=get_entity_identifier_column(
+                        Product, EntityIdentifierType.NAME
+                    ),
                 )
                 if product:
                     product_info = ProductInfo(self.dataloader)

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from datetime import datetime
+from datetime import datetime, date
 from enum import Enum, EnumMeta
 from typing import Any, Type, Union, Optional
 
@@ -14,13 +14,19 @@ from src.database.tables import BaseTable
 from src.entities import AccessLevel, Entity
 from src import entities
 
-from .utils import generate_id, get_entity_from_selectbox, get_entity_identifier_column
+from .utils import (
+    generate_id,
+    get_entity_from_selectbox,
+    get_entity_identifier_column,
+    EntityIdentifierType,
+)
 
 VALUE_TYPE_WIDGET_MAP = {
     list: st.selectbox,
     str: st.text_input,
     float: st.number_input,
     int: st.number_input,
+    date: st.date_input,
 }
 
 
@@ -38,8 +44,8 @@ class AppTemplate(HydraHeadApp):
     def run(self) -> None:
         ...
 
-    def select_entity_to_edit(self) -> Union[Entity, None]:
-        entity_identifier_column = get_entity_identifier_column(self.entity_type, "name")
+    def select_entity_to_edit(self, identifier_type: EntityIdentifierType) -> Union[Entity, None]:
+        entity_identifier_column = get_entity_identifier_column(self.entity_type, identifier_type)
         st.write(f"Edit existing {self.entity_type_name} details")
         return get_entity_from_selectbox(
             entity_type=self.entity_type,
@@ -57,19 +63,19 @@ class AppTemplate(HydraHeadApp):
             if self.entity_to_edit:
                 value = self.entity_to_edit.__dict__[attribute_name]
                 return value.value if isinstance(value, Enum) else value
-            elif ID_SUFFIX in attribute_name:
+            elif attribute_name.endswith(ID_SUFFIX):
                 return generate_id()
+            elif isinstance(attribute_type, EnumMeta):
+                return [i.value for i in getattr(entities, attribute_type.__name__)]
+            elif attribute_name.endswith("_date"):
+                return datetime.now().date()
             else:
-                return (
-                    [i.value for i in getattr(entities, attribute_type.__name__)]
-                    if isinstance(attribute_type, EnumMeta)
-                    else attribute_type()
-                )
+                return attribute_type()
 
         def _get_input_widget(attribute_name: str, attribute_type: type):
             caption = _generate_caption(attribute_name)
             value = _get_value(attribute_name, attribute_type)
-            return VALUE_TYPE_WIDGET_MAP[type(value)](caption, value=value)
+            return VALUE_TYPE_WIDGET_MAP[type(value)](caption, value)
 
         entity_info_dict = {
             attribute_name: _get_input_widget(attribute_name, attribute_type)
@@ -77,10 +83,10 @@ class AppTemplate(HydraHeadApp):
         }
         return self.entity_type(**entity_info_dict)
 
-    @staticmethod
-    def save_entity_df(entity_df: pd.DataFrame, output_table: BaseTable) -> None:
-        Exporter().append_df_to_database(entity_df, output_table)
-        st.success(f"Exported to {output_table.query.table_name} table")
+    def save_entity_df(self, entity_df: pd.DataFrame) -> None:
+        Exporter().append_df_to_database(entity_df, self.output_table)
+        st.success(f"Exported to {self.output_table.query.table_name} table")
+        self.dataloader.load_single_table(self.output_table)
 
     def download_data(self):
         @st.cache

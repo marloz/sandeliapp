@@ -1,4 +1,4 @@
-from ..utils import get_entity_identifier_column
+from ..utils import get_entity_identifier_column, EntityIdentifierType
 from src.database.loader import Loader
 from src.entities import Customer, Product
 from src.database.tables import DiscountTable, OrdersTable
@@ -17,7 +17,7 @@ class ProductInfo:
         self.show_active_discount(product)
 
     def check_inventory(self, product: Product) -> None:
-        identifier = get_entity_identifier_column(Product, "name")
+        identifier = get_entity_identifier_column(Product, EntityIdentifierType.NAME)
         quantity_left = (
             self.dataloader.data[OrdersTable().query.table_name]
             .groupby(identifier, as_index=True)["quantity"]

@@ -1,12 +1,25 @@
-from sqlite3 import Row
 from .app_template import AppTemplate
-from src.entities import AccessLevel
+from src.entities import AccessLevel, Entity
 from src.processing import RowStatus
+from src.database.tables import BaseTable
+from src.database.loader import Loader
+from .utils import EntityIdentifierType
 
 import streamlit as st
+from typing import Type
 
 
 class EntityApp(AppTemplate):
+    def __init__(
+        self,
+        entity_type: Type[Entity],
+        output_table: BaseTable,
+        dataloader: Loader,
+        identifier_type: EntityIdentifierType,
+    ):
+        super().__init__(entity_type, output_table, dataloader)
+        self.identifier_type = identifier_type
+
     def run(self):
 
         self.download_data()
@@ -15,17 +28,26 @@ class EntityApp(AppTemplate):
 
         if st.session_state.current_user_access != AccessLevel.user.value:
             with edit_entity_col:
-                self.entity_to_edit = self.select_entity_to_edit()
+                self.entity_to_edit = self.select_entity_to_edit(self.identifier_type)
 
         with new_entity_col:
             entity = self.fill_in_entity_details()
 
-        row_status = RowStatus.UPDATE if self.entity_to_edit else RowStatus.INSERT
-        st.write(f"These records will be exported using write mode: {row_status.name}")
-        entity_df = self.output_table.processing.process(
-            entity_list=[entity], row_status=row_status
-        )
+        save_col, del_col = st.columns(2)
 
-        if st.button(f"Save {self.output_table.query.table_name}"):
-            self.save_entity_df(entity_df, output_table=self.output_table)
-            self.dataloader.load_single_table(self.output_table)
+        with save_col:
+            if st.button(f"Save {self.output_table.query.table_name}"):
+                row_status = RowStatus.UPDATE if self.entity_to_edit else RowStatus.INSERT
+                entity_df = self.output_table.processing.process(
+                    entity_list=[entity], row_status=row_status
+                )
+                self.save_entity_df(entity_df)
+
+        if self.entity_to_edit:
+            with del_col:
+                if st.button(f"Delete {self.output_table.query.table_name}"):
+                    entity_df = self.output_table.processing.process(
+                        entity_list=[entity], row_status=RowStatus.DELETE
+                    )
+                    self.save_entity_df(entity_df)
+

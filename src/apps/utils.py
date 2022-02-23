@@ -1,5 +1,6 @@
 from typing import Dict, Type, Union
 from uuid import uuid1
+from enum import Enum
 
 import pandas as pd
 import streamlit as st
@@ -48,8 +49,15 @@ def generate_id(len: int = 10) -> str:
     return str(uuid1())[:len]
 
 
-def get_entity_identifier_column(entity_type: Type[Entity], identifier_type: str) -> str:
-    return COLUMN_NAME_SEPARATOR.join([entity_type.name(), identifier_type])
+class EntityIdentifierType(Enum):
+    NAME = "name"
+    ID = "id"
+
+
+def get_entity_identifier_column(
+    entity_type: Type[Entity], identifier_type: EntityIdentifierType
+) -> str:
+    return COLUMN_NAME_SEPARATOR.join([entity_type.name(), identifier_type.value])
 
 
 def calculate_order_summary(order_df: pd.DataFrame) -> Dict[str, str]:
