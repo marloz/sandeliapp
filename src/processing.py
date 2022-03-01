@@ -25,7 +25,7 @@ class RowStatus(Enum):
 
 class ProcessingStrategy(ABC):
     @abstractmethod
-    def process(self, entity_list: List[Entity], row_status: RowStatus = RowStatus) -> pd.DataFrame:
+    def process(self, entity_list: List[Entity], row_status: RowStatus) -> pd.DataFrame:
         ...
 
     @classmethod

@@ -14,9 +14,7 @@ from ..utils import (
     EntityIdentifierType,
 )
 from .product_info import ProductInfo
-from .summary import show_order_summary
-
-st.session_state["order_rows"] = []
+from .summary import OrderSummary
 
 
 class OrderApp(AppTemplate):
@@ -44,15 +42,22 @@ class OrderApp(AppTemplate):
             )
 
             if st.button("Add to order"):
-                st.session_state["order_rows"].append(order_row)
+                st.session_state.order_rows.append(order_row)
 
-            if len(st.session_state["order_rows"]) > 0:
-                order_df = self.output_table.processing.process(st.session_state["order_rows"])
-                submitted = show_order_summary(order_df, customer)
+            if len(st.session_state.order_rows) > 0:
+                order_df = self.entity_processor().process(st.session_state.order_rows)
+                order_summary = OrderSummary(
+                    order_rows=st.session_state.order_rows,
+                    buyer=customer,
+                    processor=self.entity_processor(),
+                )
+                order_summary.show()
 
-                if submitted:
-                    self.save_entity_df(order_df)
-                    st.session_state["order_rows"] = []
+                if order_summary.submitted:
+                    order_df = order_summary.df
+                    self.save_entity_df(order_df, output_table=self.output_table)
+                    self.dataloader.update(self.output_table)
+                    st.session_state.order_rows = []
 
     def write_manager_info(self: Loader) -> Manager:
         manager = get_entity_from_df(

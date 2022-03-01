@@ -26,7 +26,6 @@ VALUE_TYPE_WIDGET_MAP = {
     str: st.text_input,
     float: st.number_input,
     int: st.number_input,
-    date: st.date_input,
 }
 
 

@@ -1,6 +1,7 @@
 *.log
 .vscode/
-__pycahce__/
+**/__pycahce__
 *.ipynb
+*.log
+*.pdf
 *.pyc
-invoice.pdf
