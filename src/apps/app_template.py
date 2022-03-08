@@ -1,24 +1,24 @@
 from abc import abstractmethod
-from datetime import datetime, date
+from datetime import date, datetime
 from enum import Enum, EnumMeta
-from typing import Any, Type, Union, Optional
+from typing import Any, Optional, Type, Union
 
 import pandas as pd
 import streamlit as st
 from config.formats import DATE_FORMAT
 from hydralit import HydraHeadApp
+from src import entities
 from src.config import COLUMN_NAME_SEPARATOR, ID_SUFFIX
 from src.database.exporter import Exporter
 from src.database.loader import Loader
 from src.database.tables import BaseTable
 from src.entities import AccessLevel, Entity
-from src import entities
 
 from .utils import (
+    EntityIdentifierType,
     generate_id,
     get_entity_from_selectbox,
     get_entity_identifier_column,
-    EntityIdentifierType,
 )
 
 VALUE_TYPE_WIDGET_MAP = {
@@ -26,17 +26,23 @@ VALUE_TYPE_WIDGET_MAP = {
     str: st.text_input,
     float: st.number_input,
     int: st.number_input,
+    date: st.date_input,
 }
 
 
 class AppTemplate(HydraHeadApp):
     def __init__(
-        self, entity_type: Type[Entity], output_table: BaseTable, dataloader: Loader
+        self,
+        entity_type: Type[Entity],
+        output_table: BaseTable,
+        dataloader: Loader,
+        identifier_type: EntityIdentifierType,
     ) -> None:
         self.entity_type = entity_type
         self.entity_type_name = entity_type.name()
         self.dataloader = dataloader
         self.output_table = output_table
+        self.identifier_type = identifier_type
         self.entity_to_edit: Optional[Entity] = None
 
     @abstractmethod
@@ -88,14 +94,9 @@ class AppTemplate(HydraHeadApp):
         self.dataloader.load_single_table(self.output_table)
 
     def download_data(self):
-        @st.cache
-        def convert_df_to_csv(df):
-            # IMPORTANT: Cache the conversion to prevent computation on every rerun
-            return df.to_csv(sep=";", index=False).encode("utf-8")
-
         if st.session_state.current_user_access != AccessLevel.user.value:
-            data = self.dataloader.data[self.output_table.query.table_name]
-            data = convert_df_to_csv(data)
+            df = self.dataloader.data[self.output_table.query.table_name]
+            data = df.to_csv(sep=";", index=False).encode("utf-8")
             output_name = COLUMN_NAME_SEPARATOR.join(
                 [self.output_table.query.table_name, datetime.now().strftime(DATE_FORMAT)]
             )

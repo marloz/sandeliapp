@@ -1,10 +1,10 @@
 import hydralit as hy
 import streamlit as st
 
-from src.apps.order.order import OrderApp
 from src.apps.discount import DiscountApp
 from src.apps.entity_app import EntityApp
-from src.apps.utils import get_entity_from_df, get_entity_identifier_column, EntityIdentifierType
+from src.apps.order.order import OrderApp
+from src.apps.utils import EntityIdentifierType, get_entity_from_df, get_entity_identifier_column
 from src.database.loader import preload_data
 from src.database.tables import (
     CustomerTable,
@@ -13,10 +13,10 @@ from src.database.tables import (
     OrdersTable,
     ProductTable,
 )
-from src.entities import AccessLevel, Customer, Discount, Manager, Orders, Product
+from src.entities import AccessLevel, Customer, Discount, Manager, Order, Product
 
-# MANAGER_ID = 'some_email@medexy.lt'  # for admin
-MANAGER_ID = "5f4ccfd7-7"  # for manager
+MANAGER_ID = "some_email@medexy.lt"  # for admin
+# MANAGER_ID = "5f4ccfd7-7"  # for manager
 # MANAGER_ID = 'a69a99cc-7'  # for user
 
 
@@ -44,8 +44,13 @@ def main():
     )
     st.session_state.current_user_access = manager.access.value
 
+    if "order_rows" not in st.session_state:
+        st.session_state.order_rows = []
     order_app = OrderApp(
-        entity_type=Orders, output_table=OrdersTable(), dataloader=st.session_state.dataloader,
+        entity_type=Order,
+        output_table=OrdersTable(),
+        dataloader=st.session_state.dataloader,
+        identifier_type=EntityIdentifierType.ID,
     )
     app.add_app("Order", app=order_app)
 
@@ -79,6 +84,7 @@ def main():
             entity_type=Manager,
             output_table=ManagerTable(),
             dataloader=st.session_state.dataloader,
+            identifier_type=EntityIdentifierType.NAME,
         )
         app.add_app("Manager", app=manager_app)
 

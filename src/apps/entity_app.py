@@ -1,25 +1,11 @@
-from .app_template import AppTemplate
-from src.entities import AccessLevel, Entity
-from src.processing import RowStatus
-from src.database.tables import BaseTable
-from src.database.loader import Loader
-from .utils import EntityIdentifierType
-
 import streamlit as st
-from typing import Type
+from src.entities import AccessLevel
+from src.processing import RowStatus
+
+from .app_template import AppTemplate
 
 
 class EntityApp(AppTemplate):
-    def __init__(
-        self,
-        entity_type: Type[Entity],
-        output_table: BaseTable,
-        dataloader: Loader,
-        identifier_type: EntityIdentifierType,
-    ):
-        super().__init__(entity_type, output_table, dataloader)
-        self.identifier_type = identifier_type
-
     def run(self):
 
         self.download_data()

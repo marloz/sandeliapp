@@ -4,3 +4,4 @@ streamlit==1.2.0
 hydralit==1.0.10
 pytest==6.2.5
 borb==2.0.18
+psycopg2==2.9.3

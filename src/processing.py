@@ -2,9 +2,8 @@ import json
 import re
 from abc import ABC, abstractmethod
 from datetime import datetime
-from sqlite3 import Row
-from typing import Any, Dict, List
 from enum import Enum
+from typing import Any, Dict, List
 
 import pandas as pd
 from pydantic.json import pydantic_encoder
@@ -29,7 +28,13 @@ class ProcessingStrategy(ABC):
         ...
 
     @classmethod
-    def _preprocess(cls, entity: Entity, row_status: RowStatus) -> pd.DataFrame:
+    def _preprocess(cls, entity_list: List[Entity], row_status: RowStatus) -> pd.DataFrame:
+        return pd.concat(
+            [cls._preprocess_single_entity(entity, row_status) for entity in entity_list]
+        )
+
+    @classmethod
+    def _preprocess_single_entity(cls, entity: Entity, row_status: RowStatus) -> pd.DataFrame:
         entity_dict = cls._serialize_entity(entity)
         return (
             cls._entity_dict_to_df(entity_dict)
@@ -64,13 +69,13 @@ class ProcessingStrategy(ABC):
 
 class DefaultProcessing(ProcessingStrategy):
     def process(self, entity_list: List[Entity], row_status: RowStatus) -> pd.DataFrame:
-        return self._preprocess(entity_list[0], row_status)
+        return self._preprocess(entity_list=entity_list, row_status=row_status)
 
 
 class OrderProcessing(ProcessingStrategy):
     def process(self, entity_list: List[Entity], row_status: RowStatus) -> pd.DataFrame:
         return (
-            pd.concat([self._preprocess(entity, row_status) for entity in entity_list])
+            self._preprocess(entity_list=entity_list, row_status=row_status)
             .pipe(self.add_order_amounts)
             .pipe(self.calculate_payment_due)
             .reset_index(drop=True)

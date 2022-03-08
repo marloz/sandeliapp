@@ -4,14 +4,14 @@ from typing import Tuple
 import streamlit as st
 from src.database.loader import Loader
 from src.database.tables import CustomerTable, ManagerTable, ProductTable
-from src.entities import Customer, Manager, Orders, OrderType, Product
+from src.entities import AccessLevel, Customer, Manager, Order, OrderType, Product
 
 from ..app_template import AppTemplate
 from ..utils import (
+    EntityIdentifierType,
     get_entity_from_df,
     get_entity_from_selectbox,
     get_entity_identifier_column,
-    EntityIdentifierType,
 )
 from .product_info import ProductInfo
 from .summary import OrderSummary
@@ -25,13 +25,27 @@ class OrderApp(AppTemplate):
 
         self.download_data()
 
+        # TODO: Order editing
+        # add select box for getting order id for editing
+        # filter orders_df in dataloader to selected id
+        # overwrite manager with currently logged in
+        # get customer id and load customer entity
+        # extract rest of fixed variables (date, type)
+        # loop through rows instantiate Orders and append to st.session_state.order_rows
+        # show summary will be invoked automatically
+        # now new items can be added or rows removed as in typical order
+
+        # TODO: Order deletion
+        # if order id is selected for editing, load as described above
+        # but now pressing 'Save' button saves using UPDATE status tyep
+
         order_date, order_type, customer = self.date_order_type_and_customer_selection()
 
         if customer:
             product, selected_quantity, discount = self.product_selection(customer)
 
         if product and customer:
-            order_row = Orders(
+            order_row = Order(
                 manager=manager,
                 customer=customer,
                 order_date=order_date,
@@ -45,18 +59,16 @@ class OrderApp(AppTemplate):
                 st.session_state.order_rows.append(order_row)
 
             if len(st.session_state.order_rows) > 0:
-                order_df = self.entity_processor().process(st.session_state.order_rows)
                 order_summary = OrderSummary(
                     order_rows=st.session_state.order_rows,
                     buyer=customer,
-                    processor=self.entity_processor(),
+                    processor=self.output_table.processing,
                 )
                 order_summary.show()
 
                 if order_summary.submitted:
                     order_df = order_summary.df
-                    self.save_entity_df(order_df, output_table=self.output_table)
-                    self.dataloader.update(self.output_table)
+                    self.save_entity_df(order_df)
                     st.session_state.order_rows = []
 
     def write_manager_info(self: Loader) -> Manager:

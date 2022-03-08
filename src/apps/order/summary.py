@@ -4,10 +4,10 @@ import pandas as pd
 import streamlit as st
 from config.paths import INVOICE_PATH
 from src.apps import utils
-from src.entities import Customer, CustomerType, Orders, PaymetTerms
+from src.entities import Customer, CustomerType, Order, PaymetTerms
 from src.invoice.base import InvoiceInfo, InvoiceType
 from src.invoice.vat import VATInvoice
-from src.processing import ProcessingStrategy
+from src.processing import ProcessingStrategy, RowStatus
 
 # TODO: need to have method to load seller from customer table
 seller = Customer(
@@ -40,7 +40,7 @@ ORDER_SUMMARY_COLUMNS = [
 
 class OrderSummary:
     def __init__(
-        self, order_rows: List[Orders], buyer: Customer, processor: ProcessingStrategy
+        self, order_rows: List[Order], buyer: Customer, processor: ProcessingStrategy
     ) -> None:
         self.order_rows = order_rows
         self.buyer = buyer
@@ -49,7 +49,7 @@ class OrderSummary:
 
     @property
     def df(self) -> pd.DataFrame:
-        return self.processor.process(self.order_rows)
+        return self.processor.process(self.order_rows, row_status=RowStatus.INSERT)
 
     def show(self) -> None:
         summary_col, removal_col = st.columns([4, 1])
