@@ -68,8 +68,6 @@ class AppTemplate(HydraHeadApp):
             if self.entity_to_edit:
                 value = self.entity_to_edit.__dict__[attribute_name]
                 return value.value if isinstance(value, Enum) else value
-            elif attribute_name.endswith(ID_SUFFIX):
-                return generate_id()
             elif isinstance(attribute_type, EnumMeta):
                 return [i.value for i in getattr(entities, attribute_type.__name__)]
             elif attribute_name.endswith("_date"):

@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from datetime import datetime
-from pydantic.dataclasses import dataclass
 from dataclasses import field
+from datetime import datetime
 from typing import List
 
+from pydantic.dataclasses import dataclass
 from src.config import DATE_FORMAT
 
 
@@ -67,7 +67,7 @@ class GroupedSumQuery(LoaderQuery):
             SELECT
                 {groupby_columns},
                 SUM({self.column_to_sum}) as {sum_column}
-            FROM ({latest_row_query})
+            FROM ({latest_row_query}) as tbl
             GROUP BY {groupby_columns}
             ORDER BY {sum_column} DESC
     """
@@ -87,7 +87,7 @@ class ValidDateQuery(LoaderQuery):
         return f"""
             SELECT
                 *
-            FROM ({latest_row_query})
+            FROM ({latest_row_query}) as tbl
             WHERE
                 {self.start_date_column} <= '{self.filter_date}'
             AND {self.end_date_column} >= '{self.filter_date}'

@@ -1,22 +1,22 @@
 import os
 from traceback import print_exception
 
-import psycopg2
-from config.paths import DATABASE
+import sqlalchemy
+from dotenv import load_dotenv
 
 # Available as env variable in connected Heroko app conected Postgres database
+load_dotenv()
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
 class SqlExecutor:
-    def __init__(self, database: str = DATABASE):
+    def __init__(self, database: str = DATABASE_URL):
         self.database = database
-        self.connection: psycopg2.extensions.connection
-        self.cursor: psycopg2.extensions.cursor
+        self.connection: sqlalchemy.engine.base.Engine
 
     def __enter__(self):
-        self.connection = psycopg2.connect(self.database)
-        self.cursor = self.connection.cursor()
+        engine = sqlalchemy.create_engine(self.database)
+        self.connection = engine.connect()
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):

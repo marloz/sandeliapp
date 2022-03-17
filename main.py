@@ -15,7 +15,7 @@ from src.database.tables import (
 )
 from src.entities import AccessLevel, Customer, Discount, Manager, Order, Product
 
-MANAGER_ID = "some_email@medexy.lt"  # for admin
+MANAGER_ID = "info@medexy.lt"  # for admin
 # MANAGER_ID = "5f4ccfd7-7"  # for manager
 # MANAGER_ID = 'a69a99cc-7'  # for user
 

@@ -117,6 +117,7 @@ class OrderApp(AppTemplate):
                 )
                 if product:
                     product_info = ProductInfo(self.dataloader)
+                    st.write("initialize prod info")
                     product_info.show(product, customer)
                     active_discount = product_info.active_discount
 
