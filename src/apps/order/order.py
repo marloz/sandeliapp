@@ -3,7 +3,7 @@ from typing import Tuple
 
 import streamlit as st
 from src.database.loader import Loader
-from src.database.tables import CustomerTable, ManagerTable, ProductTable
+from src.database.tables import CustomerTable, ManagerTable, OrdersTable, ProductTable
 from src.entities import AccessLevel, Customer, Manager, Order, OrderType, Product
 
 from ..app_template import AppTemplate
@@ -18,6 +18,12 @@ from .summary import OrderSummary
 
 
 class OrderApp(AppTemplate):
+    @property
+    def new_order_id(self) -> str:
+        max_order_id = self.dataloader.data[OrdersTable().query.table_name]["order_id"].max()
+        order_id_int = int(max_order_id.replace("MDS", ""))
+        return "MDS" + str(int(1e7) + order_id_int)[1:]
+
     def run(self):
         product, customer = None, None
 
@@ -46,6 +52,7 @@ class OrderApp(AppTemplate):
 
         if product and customer:
             order_row = Order(
+                order_id=self.new_order_id,
                 manager=manager,
                 customer=customer,
                 order_date=order_date,
@@ -108,6 +115,8 @@ class OrderApp(AppTemplate):
             active_discount = 0.0
 
             with product_col:
+                # TODO: get product list from inventory table (grouped orders)
+                # otherwise it's populated with inactive products
                 product = get_entity_from_selectbox(
                     entity_type=Product,
                     df=self.dataloader.data[ProductTable().query.table_name],

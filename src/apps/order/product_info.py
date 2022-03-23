@@ -1,5 +1,4 @@
 import streamlit as st
-from pyparsing import identbodychars
 from src.database.loader import Loader
 from src.database.tables import DiscountTable, OrdersTable
 from src.entities import Customer, Product
@@ -18,9 +17,7 @@ class ProductInfo:
         self.show_active_discount(product)
 
     def check_inventory(self, product: Product) -> None:
-        st.write(product)
         identifier = get_entity_identifier_column(Product, EntityIdentifierType.NAME)
-        st.write(identifier)
         quantity_left = (
             self.dataloader.data[OrdersTable().query.table_name]
             .groupby(identifier, as_index=True)["quantity"]

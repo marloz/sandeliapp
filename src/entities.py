@@ -44,7 +44,7 @@ class CustomerType(Enum):
     default = "default"
     wholesale = "whole sale"
     retail = "retail"
-    cosmetgologist = 'cosmetologist'
+    cosmetgologist = "cosmetologist"
 
 
 class PriceFactor(Enum):
@@ -96,6 +96,7 @@ class OrderType(Enum):
 
 @dataclass
 class Order(Entity):
+    order_id: str
     manager: Manager
     customer: Customer
     product: Product

@@ -79,7 +79,6 @@ class OrderProcessing(ProcessingStrategy):
             .pipe(self.add_order_amounts)
             .pipe(self.calculate_payment_due)
             .reset_index(drop=True)
-            .assign(order_id=generate_id())
         )
 
     @staticmethod
