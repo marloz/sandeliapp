@@ -12,6 +12,7 @@ from src.database.tables import (
     ManagerTable,
     OrdersTable,
     ProductTable,
+    InventoryTable,
 )
 from src.entities import AccessLevel, Customer, Discount, Manager, Order, Product
 
@@ -29,6 +30,7 @@ def main():
         ProductTable(),
         DiscountTable(),
         OrdersTable(),
+        InventoryTable(),
     ]
     st.session_state.dataloader = preload_data(tables)
 

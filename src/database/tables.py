@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from src.database.queries import GroupedSumQuery, LatestRowQuery, LoaderQuery, ValidDateQuery
 from src.processing import DefaultProcessing, OrderProcessing, ProcessingStrategy
 
-
 NON_ARGUMENT_ATTRS = ["__initialised__", "query", "processing"]
 
 
@@ -36,8 +35,9 @@ class ProductTable(BaseTable):
 @dataclass
 class InventoryTable(BaseTable):
     query: LoaderQuery = GroupedSumQuery(
-        table_name="orders",
+        table_name="inventory",
         id_column="order_id",
+        input_table="orders",
         groupby_columns=["product_name"],
         column_to_sum="quantity",
     )

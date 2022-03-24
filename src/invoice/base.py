@@ -7,8 +7,10 @@ from pathlib import Path
 import pandas as pd
 from borb.pdf.canvas.layout.image.image import Image
 from borb.pdf.canvas.layout.layout_element import Alignment
-from borb.pdf.canvas.layout.page_layout.multi_column_layout import SingleColumnLayout
-from borb.pdf.canvas.layout.table.fixed_column_width_table import FixedColumnWidthTable as Table
+from borb.pdf.canvas.layout.page_layout.multi_column_layout import \
+    SingleColumnLayout
+from borb.pdf.canvas.layout.table.fixed_column_width_table import \
+    FixedColumnWidthTable as Table
 from borb.pdf.canvas.layout.table.table import TableCell
 from borb.pdf.canvas.layout.text.paragraph import Paragraph
 from borb.pdf.document import Document
@@ -25,10 +27,10 @@ PAYMENT_TEXT = "Please include invoice number in payment details"
 
 @dataclass
 class Font:
-    default: str = "Courier"
-    oblique: str = "Courier-oblique"
-    bold: str = "Courier-bold"
-    bold_oblique: str = "Courier-bold-oblique"
+    default: str = "Helvetica"
+    oblique: str = "Helvetica-oblique"
+    bold: str = "Helvetica-bold"
+    bold_oblique: str = "Helvetica-bold-oblique"
 
 
 class InvoiceType(Enum):
@@ -96,7 +98,7 @@ class InvoiceTemplate(ABC):
         return t
 
     def get_buyer_seller_info(self) -> Table:
-        t = Table(number_of_rows=6, number_of_columns=2)
+        t = Table(number_of_rows=len(CustomerAttributes) + 1, number_of_columns=2)
 
         info_items = ["Seller:", "Buyer:"]
         for attribute in CustomerAttributes:

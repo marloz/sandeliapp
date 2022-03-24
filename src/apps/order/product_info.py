@@ -1,6 +1,6 @@
 import streamlit as st
 from src.database.loader import Loader
-from src.database.tables import DiscountTable, OrdersTable
+from src.database.tables import DiscountTable, InventoryTable
 from src.entities import Customer, Product
 
 from ..utils import EntityIdentifierType, get_entity_identifier_column
@@ -19,10 +19,9 @@ class ProductInfo:
     def check_inventory(self, product: Product) -> None:
         identifier = get_entity_identifier_column(Product, EntityIdentifierType.NAME)
         quantity_left = (
-            self.dataloader.data[OrdersTable().query.table_name]
-            .groupby(identifier, as_index=True)["quantity"]
-            .sum()
-            .loc[product.product_name]
+            self.dataloader.data[InventoryTable().query.table_name]
+            .set_index(identifier)
+            .loc[product.product_name, "sum_quantity"]
         )
         st.write(f"Left in stock: {quantity_left}")
 

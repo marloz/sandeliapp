@@ -54,6 +54,7 @@ class LatestRowQuery(LoaderQuery):
 @dataclass
 class GroupedSumQuery(LoaderQuery):
 
+    input_table: str
     groupby_columns: List[str]
     column_to_sum: str
 
@@ -61,7 +62,7 @@ class GroupedSumQuery(LoaderQuery):
         groupby_columns = ",".join(self.groupby_columns)
         sum_column = f"sum_{self.column_to_sum}"
         latest_row_query = LatestRowQuery(
-            table_name=self.table_name, id_column=self.id_column,
+            table_name=self.input_table, id_column=self.id_column,
         ).get_query()
         return f"""
             SELECT

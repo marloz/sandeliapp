@@ -56,7 +56,7 @@ class OrderSummary:
 
         with removal_col:
             self.remove_items()
-            self.download_invoice()
+            # self.download_invoice()
 
         with summary_col:
             order_summary = st.empty()
@@ -88,6 +88,7 @@ class OrderSummary:
         )
         invoice = VATInvoice(invoice_info)
         invoice.generate()
+
         filename_args = [invoice_info.invoice_type.name, "invoice", invoice_info.invoice_date]
         invoice_filename = "_".join(filename_args) + ".pdf"
         with open(INVOICE_PATH, "rb") as pdf:
