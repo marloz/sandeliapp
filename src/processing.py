@@ -29,18 +29,16 @@ class ProcessingStrategy(ABC):
 
     @classmethod
     def _preprocess(cls, entity_list: List[Entity], row_status: RowStatus) -> pd.DataFrame:
-        return pd.concat(
-            [cls._preprocess_single_entity(entity, row_status) for entity in entity_list]
-        )
-
-    @classmethod
-    def _preprocess_single_entity(cls, entity: Entity, row_status: RowStatus) -> pd.DataFrame:
-        entity_dict = cls._serialize_entity(entity)
         return (
-            cls._entity_dict_to_df(entity_dict)
+            pd.concat([cls._preprocess_single_entity(entity) for entity in entity_list])
             .pipe(cls._add_timestamp)
             .pipe(cls._add_row_status, row_status=row_status)
         )
+
+    @classmethod
+    def _preprocess_single_entity(cls, entity: Entity) -> pd.DataFrame:
+        entity_dict = cls._serialize_entity(entity)
+        return cls._entity_dict_to_df(entity_dict)
 
     @staticmethod
     def _serialize_entity(entity: Entity) -> Dict[str, Any]:

@@ -1,7 +1,9 @@
 from datetime import date
-from typing import Tuple
+from typing import List, Tuple, Union
 
+import pandas as pd
 import streamlit as st
+from config.paths import INVOICE_PATH
 from src.database.loader import Loader
 from src.database.tables import (
     CustomerTable,
@@ -10,7 +12,18 @@ from src.database.tables import (
     OrdersTable,
     ProductTable,
 )
-from src.entities import AccessLevel, Customer, Manager, Order, OrderType, Product
+from src.entities import (
+    AccessLevel,
+    Customer,
+    CustomerType,
+    Manager,
+    Order,
+    OrderType,
+    PaymetTerms,
+    Product,
+)
+from src.invoice.base import InvoiceInfo, InvoiceType
+from src.invoice.vat import VATInvoice
 
 from ..app_template import AppTemplate
 from ..utils import (
@@ -22,6 +35,22 @@ from ..utils import (
 from .product_info import ProductInfo
 from .summary import OrderSummary
 
+# TODO: need to have method to load seller from customer table
+seller = Customer(
+    customer_id="0",
+    customer_name="UAB Medexy",
+    customer_type=CustomerType.default,
+    pricing_factor=1.0,
+    payment_terms=PaymetTerms.days_30,
+    address="Ukmergers g. 241",
+    post_code="LT-12345",
+    customer_location="Vilnius",
+    email="info@medexy.lt",
+    telephone="+370 526 53483",
+    customer_code="300154866",
+    vat_code="LT24 3500 0100 0132 3457",
+)
+
 
 class OrderApp(AppTemplate):
     @property
@@ -31,11 +60,13 @@ class OrderApp(AppTemplate):
         return "MDS" + str(int(1e7) + new_order_id_int)[1:]
 
     def run(self):
-        product, customer = None, None
-
-        manager = self.write_manager_info()
+        self.manager = self.write_manager_info()
 
         self.download_data()
+
+        self.new_order()
+
+        st.session_state.orders_rows = self.edit_order()
 
         # TODO: Order editing
         # add select box for getting order id for editing
@@ -51,6 +82,32 @@ class OrderApp(AppTemplate):
         # if order id is selected for editing, load as described above
         # but now pressing 'Save' button saves using UPDATE status tyep
 
+        if len(st.session_state.order_rows) > 0:
+            order_summary = OrderSummary(
+                order_rows=st.session_state.order_rows, processor=self.output_table.processing,
+            )
+            order_summary.show()
+
+            if order_summary.submitted:
+                order_df = order_summary.df
+                self.save_entity_df(order_df)
+                st.session_state.order_rows = []
+                # TODO: debug, why invoice generation fails
+                # self.download_invoice(order_df, customer)
+
+    def write_manager_info(self) -> Manager:
+        manager = get_entity_from_df(
+            entity_type=Manager,
+            df=self.dataloader.data[ManagerTable.query.table_name],
+            entity_identifier_column=get_entity_identifier_column(Manager, EntityIdentifierType.ID),
+            entity_identifier=st.session_state.current_user,
+        )
+        st.write(manager)
+        return manager
+
+    def new_order(self) -> None:
+        product, customer = None, None
+
         order_date, order_type, customer = self.date_order_type_and_customer_selection()
 
         if customer:
@@ -59,7 +116,7 @@ class OrderApp(AppTemplate):
         if product and customer:
             order_row = Order(
                 order_id=self.new_order_id,
-                manager=manager,
+                manager=self.manager,
                 customer=customer,
                 order_date=order_date,
                 order_type=order_type,
@@ -71,28 +128,41 @@ class OrderApp(AppTemplate):
             if st.button("Add to order"):
                 st.session_state.order_rows.append(order_row)
 
-            if len(st.session_state.order_rows) > 0:
-                order_summary = OrderSummary(
-                    order_rows=st.session_state.order_rows,
-                    buyer=customer,
-                    processor=self.output_table.processing,
-                )
-                order_summary.show()
+    def edit_order(self) -> Union[List[Order], None]:
+        if st.session_state.current_user_access != AccessLevel.user.value:
+            order_id = st.text_input("Enter order id to edit")
+            order_df = self.dataloader.data[OrdersTable().query.table_name].loc[
+                lambda x: x.order_id == order_id
+            ]
+            if order_df.shape[0] > 0:
+                orders = []
+                for _, row in order_df.iterrows():
+                    kwargs = {}
+                    for entity in [Product, Customer, Manager]:
+                        identifier_column = get_entity_identifier_column(
+                            entity, EntityIdentifierType.ID
+                        )
+                        kwargs[entity.name()] = get_entity_from_df(
+                            entity,
+                            self.dataloader.data[entity.name()],
+                            entity_identifier_column=identifier_column,
+                            entity_identifier=row[identifier_column],
+                        )
 
-                if order_summary.submitted:
-                    order_df = order_summary.df
-                    self.save_entity_df(order_df)
-                    st.session_state.order_rows = []
+                        kwargs.update(
+                            dict(
+                                order_id=row["order_id"],
+                                order_date=row["order_date"],
+                                order_type=row["order_type"],
+                                quantity=row["quantity"],
+                                discount=row["discount"],
+                            )
+                        )
 
-    def write_manager_info(self: Loader) -> Manager:
-        manager = get_entity_from_df(
-            entity_type=Manager,
-            df=self.dataloader.data[ManagerTable.query.table_name],
-            entity_identifier_column=get_entity_identifier_column(Manager, EntityIdentifierType.ID),
-            entity_identifier=st.session_state.current_user,
-        )
-        st.write(manager)
-        return manager
+                        order = Order(**kwargs)
+                        orders.append(order)
+
+                return orders
 
     def date_order_type_and_customer_selection(self) -> Tuple[date, str, Customer]:
         with st.container():
@@ -142,3 +212,27 @@ class OrderApp(AppTemplate):
                 selected_quantity = st.number_input("Enter quantity", min_value=1)
 
             return product, selected_quantity, active_discount
+
+    @staticmethod
+    def download_invoice(df: pd.DataFrame, customer: Customer) -> None:
+        invoice_info = InvoiceInfo(
+            # TODO: probably need select box, because order type != invoice type
+            invoice_type=InvoiceType.VAT,
+            invoice_number=df.iloc[0].order_id,
+            invoice_date=df.iloc[0].order_date,
+            buyer=customer,
+            seller=seller,
+            order_df=df,
+        )
+        invoice = VATInvoice(invoice_info)
+        invoice.generate()
+
+        filename_args = [invoice_info.invoice_type.name, "invoice", invoice_info.invoice_date]
+        invoice_filename = "_".join(filename_args) + ".pdf"
+        with open(INVOICE_PATH, "rb") as pdf:
+            st.download_button(
+                label="Download invoice pdf",
+                data=pdf.read(),
+                file_name=invoice_filename,
+                mime="application/octet-stream",
+            )

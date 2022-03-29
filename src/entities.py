@@ -48,12 +48,17 @@ class CustomerType(Enum):
 
 
 class PriceFactor(Enum):
-    default = 1.0
-    wholesale = 1.2
-    retail = 1.4
+    price_100 = 4.0
+    price_80 = 3.2
+    price_50 = 2.0
+    cost_price = 1.0
+    employee_price = 1.1
 
 
 class PaymetTerms(Enum):
+    days_0 = 0
+    days_7 = 7
+    days_14 = 14
     days_30 = 30
     days_60 = 60
     days_90 = 90

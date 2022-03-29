@@ -24,7 +24,7 @@ class LoaderQuery(ABC):
             WITH cte AS (
                 SELECT
                     tbl.*,
-                    ROW_NUMBER() OVER(
+                    DENSE_RANK() OVER(
                         PARTITION BY {self.id_column}
                         ORDER BY {self.timestamp_column} DESC
                     ) as row_num
