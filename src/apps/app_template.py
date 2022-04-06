@@ -7,12 +7,14 @@ import pandas as pd
 import streamlit as st
 from config.formats import DATE_FORMAT
 from hydralit import HydraHeadApp
+from numpy import row_stack
 from src import entities
 from src.config import COLUMN_NAME_SEPARATOR, ID_SUFFIX
 from src.database.exporter import Exporter
 from src.database.loader import Loader
 from src.database.tables import BaseTable
 from src.entities import AccessLevel, Entity
+from src.processing import RowStatus
 
 from .utils import (
     EntityIdentifierType,
@@ -37,6 +39,7 @@ class AppTemplate(HydraHeadApp):
         output_table: BaseTable,
         dataloader: Loader,
         identifier_type: EntityIdentifierType,
+        row_status: RowStatus = RowStatus.INSERT,
     ) -> None:
         self.entity_type = entity_type
         self.entity_type_name = entity_type.name()
@@ -44,6 +47,7 @@ class AppTemplate(HydraHeadApp):
         self.output_table = output_table
         self.identifier_type = identifier_type
         self.entity_to_edit: Optional[Entity] = None
+        self.row_status = row_status
 
     @abstractmethod
     def run(self) -> None:

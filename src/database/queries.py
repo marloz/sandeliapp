@@ -46,8 +46,6 @@ class LatestRowQuery(LoaderQuery):
                 cte
             WHERE
                 row_num = 1
-            AND
-                {self.status_column} != 'D'
         """
 
 
@@ -69,6 +67,7 @@ class GroupedSumQuery(LoaderQuery):
                 {groupby_columns},
                 SUM({self.column_to_sum}) as {sum_column}
             FROM ({latest_row_query}) as tbl
+            WHERE {self.status_column} != 'D'
             GROUP BY {groupby_columns}
             ORDER BY {sum_column} DESC
     """
@@ -92,4 +91,5 @@ class ValidDateQuery(LoaderQuery):
             WHERE
                 {self.start_date_column} <= '{self.filter_date}'
             AND {self.end_date_column} >= '{self.filter_date}'
+            AND {self.status_column} != 'D'
     """

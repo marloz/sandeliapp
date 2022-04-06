@@ -20,14 +20,17 @@ ORDER_SUMMARY_COLUMNS = [
 
 
 class OrderSummary:
-    def __init__(self, order_rows: List[Order], processor: ProcessingStrategy) -> None:
+    def __init__(
+        self, order_rows: List[Order], processor: ProcessingStrategy, row_status=RowStatus
+    ) -> None:
         self.order_rows = order_rows
         self.processor = processor
         self.submitted: bool = False
+        self.row_status = row_status
 
     @property
     def df(self) -> pd.DataFrame:
-        return self.processor.process(self.order_rows, row_status=RowStatus.INSERT)
+        return self.processor.process(self.order_rows, row_status=self.row_status)
 
     def show(self) -> None:
         summary_col, removal_col = st.columns([4, 1])
@@ -45,7 +48,15 @@ class OrderSummary:
                 order_summary = utils.calculate_order_summary(order_df)
                 for key, value in order_summary.items():
                     st.write(f"{key}: {value}")
+
                 self.submitted = st.form_submit_button("Save order")
+
+                if st.form_submit_button("Delete order"):
+                    self.row_status = RowStatus.DELETE
+                    self.submitted = True
+
+                if st.form_submit_button("Cancel",):
+                    st.session_state.order_rows = []
 
     def remove_items(self):
         order_row_indices = list(range(len(self.order_rows)))

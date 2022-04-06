@@ -4,15 +4,16 @@ import streamlit as st
 from src.apps.discount import DiscountApp
 from src.apps.entity_app import EntityApp
 from src.apps.order.order import OrderApp
+from src.apps.order.order_summary import OrderItemsApp
 from src.apps.utils import EntityIdentifierType, get_entity_from_df, get_entity_identifier_column
 from src.database.loader import preload_data
 from src.database.tables import (
     CustomerTable,
     DiscountTable,
+    InventoryTable,
     ManagerTable,
     OrdersTable,
     ProductTable,
-    InventoryTable,
 )
 from src.entities import AccessLevel, Customer, Discount, Manager, Order, Product
 
@@ -55,6 +56,14 @@ def main():
         identifier_type=EntityIdentifierType.ID,
     )
     app.add_app("Order", app=order_app)
+
+    order_item_app = OrderItemsApp(
+        entity_type=Order,
+        output_table=OrdersTable(),
+        dataloader=st.session_state.dataloader,
+        identifier_type=EntityIdentifierType.ID,
+    )
+    app.add_app("OrderItems", app=order_item_app)
 
     customer_app = EntityApp(
         entity_type=Customer,
